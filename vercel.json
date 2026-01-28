@@ -1,0 +1,92 @@
+{
+  "version": 2,
+  "buildCommand": "echo 'Build complete'",
+  "env": {
+    "MONGO_URI": "@vocab_app_mongo_uri",
+    "NODE_ENV": "production"
+  },
+  "functions": {
+    "api/**/*.js": {
+      "maxDuration": 30,
+      "memory": 1024
+    }
+  },
+  "routes": [
+    {
+      "src": "/api/batch-update",
+      "dest": "/api/batch-update.js",
+      "methods": ["POST"]
+    },
+    {
+      "src": "/api/unit-stats",
+      "dest": "/api/unit-stats.js",
+      "methods": ["GET"]
+    },
+    {
+      "src": "/api/all-words",
+      "dest": "/api/all-words.js",
+      "methods": ["GET"]
+    },
+    {
+      "src": "/api/words",
+      "dest": "/api/words.js",
+      "methods": ["GET", "POST"]
+    },
+    {
+      "src": "/api/words/(?<id>[a-z0-9]+)",
+      "dest": "/api/words/[id].js",
+      "methods": ["GET", "PUT"]
+    },
+    {
+      "src": "/manifest.json",
+      "dest": "/public/manifest.json",
+      "headers": {
+        "Cache-Control": "public, max-age=86400"
+      }
+    },
+    {
+      "src": "/sw.js",
+      "dest": "/public/sw.js",
+      "headers": {
+        "Cache-Control": "public, max-age=3600"
+      }
+    },
+    {
+      "src": "/styles.css",
+      "dest": "/public/styles.css",
+      "headers": {
+        "Cache-Control": "public, max-age=86400"
+      }
+    },
+    {
+      "src": "/script.js",
+      "dest": "/public/script.js",
+      "headers": {
+        "Cache-Control": "public, max-age=3600"
+      }
+    },
+    {
+      "src": "/(?!api)",
+      "dest": "/public/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        }
+      ]
+    }
+  ]
+}

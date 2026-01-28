@@ -1,0 +1,63 @@
+{
+  "name": "Vocabulary Learning App - Yodlash O'yini",
+  "short_name": "Vocab App",
+  "description": "3 ta o'yin usuli bilan so'zlarni yodlab olish uchun interaktiv ilova",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#ffffff",
+  "theme_color": "#667eea",
+  "categories": ["education", "productivity"],
+  "screenshots": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%23667eea' width='192' height='192'/><text x='50%' y='50%' font-size='40' fill='white' text-anchor='middle' dominant-baseline='middle'>Vocab</text></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    }
+  ],
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%23667eea' width='192' height='192' rx='50'/><text x='50%' y='55%' font-size='100' fill='white' text-anchor='middle' font-weight='bold'>📚</text></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect fill='%23667eea' width='512' height='512' rx='120'/><text x='50%' y='55%' font-size='280' fill='white' text-anchor='middle' font-weight='bold'>📚</text></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Game Mode 1",
+      "short_name": "Drag-Drop",
+      "description": "Jadval drag-drop o'yini",
+      "url": "/?mode=1",
+      "icons": []
+    },
+    {
+      "name": "Game Mode 2",
+      "short_name": "Yozish",
+      "description": "O'zbekcha yozish o'yini",
+      "url": "/?mode=2",
+      "icons": []
+    },
+    {
+      "name": "Game Mode 3",
+      "short_name": "Tanlov",
+      "description": "Tezkor tanlov o'yini",
+      "url": "/?mode=3",
+      "icons": []
+    }
+  ],
+  "screenshots_dark": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%23333' width='192' height='192'/><text x='50%' y='50%' font-size='40' fill='%23667eea' text-anchor='middle' dominant-baseline='middle'>Vocab</text></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    }
+  ]
+}
