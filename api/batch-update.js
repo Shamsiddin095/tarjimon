@@ -49,16 +49,16 @@ export default async function handler(req, res) {
     unitDoc.updatedAt = new Date();
     const savedDoc = await unitDoc.save();
 
-    // Unit stats'ni calculate qilish
-    const gameMode1Avg = Math.round(
-      unitDoc.words.reduce((sum, w) => sum + (w.gameMode1 || 0), 0) / unitDoc.words.length
-    );
-    const gameMode2Avg = Math.round(
-      unitDoc.words.reduce((sum, w) => sum + (w.gameMode2 || 0), 0) / unitDoc.words.length
-    );
-    const gameMode3Avg = Math.round(
-      unitDoc.words.reduce((sum, w) => sum + (w.gameMode3 || 0), 0) / unitDoc.words.length
-    );
+    // Unit stats'ni calculate qilish (0'dan katta bo'lganlari uchun)
+    const gameMode1Avg = unitDoc.words.length > 0 
+      ? Math.round(unitDoc.words.reduce((sum, w) => sum + (w.gameMode1 || 0), 0) / unitDoc.words.length) 
+      : 0;
+    const gameMode2Avg = unitDoc.words.length > 0 
+      ? Math.round(unitDoc.words.reduce((sum, w) => sum + (w.gameMode2 || 0), 0) / unitDoc.words.length) 
+      : 0;
+    const gameMode3Avg = unitDoc.words.length > 0 
+      ? Math.round(unitDoc.words.reduce((sum, w) => sum + (w.gameMode3 || 0), 0) / unitDoc.words.length) 
+      : 0;
 
     // Unit stats document'ni update qilish
     await UnitStats.findOneAndUpdate(

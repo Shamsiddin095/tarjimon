@@ -14,7 +14,7 @@ export default async function handler(req, res) {
 
   try {
     await connectToDatabase();
-    const { Unit } = getModels();
+    const { Unit, UnitStats } = getModels();
 
     if (req.method === 'POST') {
       // Yangi so'z qo'shish
@@ -42,6 +42,10 @@ export default async function handler(req, res) {
       unitDoc.words.push(newWord);
       unitDoc.updatedAt = new Date();
       const saved = await unitDoc.save();
+      
+      // Stats'ni o'chirib tashlash (yangi so'z qo'shilganda stats 0 bo'lishi kerak)
+      await UnitStats.deleteOne({ unit });
+      
       res.status(201).json(saved);
     } 
     else if (req.method === 'GET') {

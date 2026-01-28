@@ -115,16 +115,20 @@ async function loadUnits() {
         const sortedUnits = Array.from(unitSet).sort((a, b) => a - b);
 
         sortedUnits.forEach(unit => {
-            // Unit stats'dan foydalanish
+            // Unit stats'dan foydalanish (yangi unit uchun default 0)
             const unitStat = allStats.find(s => s.unit === unit);
             const mode1Percentage = unitStat?.gameMode1Avg || 0;
             const mode2Percentage = unitStat?.gameMode2Avg || 0;
             const mode3Percentage = unitStat?.gameMode3Avg || 0;
             
-            console.log(`📊 Unit ${unit}: Mode1=${mode1Percentage}% Mode2=${mode2Percentage}% Mode3=${mode3Percentage}%`); // Debug
+            // XATOLIK TI: Agarda stats hali yaratilmagan bo'lsa (yangi unit), hamma 0 bo'lishi kerak
+            // Mode larning barchasini tekshirish - agar 0 bo'lsa, stats yo'q deb bilaman
+            const hasStats = unitStat && (mode1Percentage > 0 || mode2Percentage > 0 || mode3Percentage > 0);
             
-            // Umumiy foyiz - eng yuqori average
-            const overallPercentage = Math.max(mode1Percentage, mode2Percentage, mode3Percentage);
+            console.log(`📊 Unit ${unit}: Mode1=${mode1Percentage}% Mode2=${mode2Percentage}% Mode3=${mode3Percentage}% hasStats=${hasStats}`); // Debug
+            
+            // Umumiy foyiz - eng yuqori average (agar stats yo'q bo'lsa, 0)
+            const overallPercentage = hasStats ? Math.max(mode1Percentage, mode2Percentage, mode3Percentage) : 0;
             
             const button = document.createElement('button');
             button.style.padding = '15px 20px';
@@ -1277,16 +1281,36 @@ if ('serviceWorker' in navigator) {
 
 // PWA Install prompt handling
 let deferredPrompt;
+let installBtnElement = null;
 
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredPrompt = e;
   console.log('📲 Install prompt available');
   
+  // Agar button allaqachon bor bo'lsa, o'chirib tashla
+  if (installBtnElement) {
+    installBtnElement.remove();
+    installBtnElement = null;
+  }
+  
   // UI'da install button ko'rsatish
-  const installBtn = createInstallButton();
-  if (installBtn) {
-    document.body.appendChild(installBtn);
+  installBtnElement = createInstallButton();
+  if (installBtnElement) {
+    document.body.appendChild(installBtnElement);
+    
+    // 5 sekunddan keyin button o'chiriladi
+    setTimeout(() => {
+      if (installBtnElement && installBtnElement.parentNode) {
+        installBtnElement.style.animation = 'slideOut 0.5s ease-in-out';
+        setTimeout(() => {
+          if (installBtnElement && installBtnElement.parentNode) {
+            installBtnElement.remove();
+            installBtnElement = null;
+          }
+        }, 500);
+      }
+    }, 5000);
   }
 });
 
@@ -1296,7 +1320,7 @@ function createInstallButton() {
   const btn = document.createElement('button');
   btn.style.cssText = `
     position: fixed;
-    bottom: 20px;
+    top: 20px;
     right: 20px;
     padding: 15px 25px;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -1309,11 +1333,12 @@ function createInstallButton() {
     box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
     font-size: 14px;
     transition: all 0.3s ease;
+    animation: slideDown 0.5s ease-out;
   `;
   btn.textContent = '📲 Ilovani O\'rnatish';
   
   btn.onmouseover = () => {
-    btn.style.transform = 'translateY(-3px)';
+    btn.style.transform = 'translateY(3px)';
     btn.style.boxShadow = '0 8px 25px rgba(102, 126, 234, 0.5)';
   };
   
@@ -1329,8 +1354,28 @@ function createInstallButton() {
       console.log(`User response to the install prompt: ${outcome}`);
       deferredPrompt = null;
       btn.remove();
+      installBtnElement = null;
     }
   };
+  
+  // slideDown animation qo'shish
+  if (!document.getElementById('install-button-styles')) {
+    const style = document.createElement('style');
+    style.id = 'install-button-styles';
+    style.textContent = `
+      @keyframes slideDown {
+        from {
+          transform: translateY(-100px);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }
   
   return btn;
 }

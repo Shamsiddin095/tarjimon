@@ -82,6 +82,9 @@ app.post('/api/words', async (req, res) => {
     unitDoc.updatedAt = new Date();
     const saved = await unitDoc.save();
     
+    // Stats'ni o'chirib tashlash (yangi so'z qo'shilganda stats 0 bo'lishi kerak)
+    await UnitStats.deleteOne({ unit });
+    
     console.log(`✅ So'z qo'shildi: Unit ${unit} - ${english}`);
     res.json(saved);
   } catch (err) {
@@ -205,16 +208,16 @@ app.post('/api/batch-update', async (req, res) => {
     unitDoc.updatedAt = new Date();
     const savedDoc = await unitDoc.save();
 
-    // Unit stats'ni calculate qilish
-    const gameMode1Avg = Math.round(
-      unitDoc.words.reduce((sum, w) => sum + (w.gameMode1 || 0), 0) / unitDoc.words.length
-    );
-    const gameMode2Avg = Math.round(
-      unitDoc.words.reduce((sum, w) => sum + (w.gameMode2 || 0), 0) / unitDoc.words.length
-    );
-    const gameMode3Avg = Math.round(
-      unitDoc.words.reduce((sum, w) => sum + (w.gameMode3 || 0), 0) / unitDoc.words.length
-    );
+    // Unit stats'ni calculate qilish (faqat 0'dan katta bo'lganlari uchun)
+    const gameMode1Avg = unitDoc.words.length > 0 
+      ? Math.round(unitDoc.words.reduce((sum, w) => sum + (w.gameMode1 || 0), 0) / unitDoc.words.length) 
+      : 0;
+    const gameMode2Avg = unitDoc.words.length > 0 
+      ? Math.round(unitDoc.words.reduce((sum, w) => sum + (w.gameMode2 || 0), 0) / unitDoc.words.length) 
+      : 0;
+    const gameMode3Avg = unitDoc.words.length > 0 
+      ? Math.round(unitDoc.words.reduce((sum, w) => sum + (w.gameMode3 || 0), 0) / unitDoc.words.length) 
+      : 0;
 
     // Unit stats document'ni update qilish
     await UnitStats.findOneAndUpdate(
