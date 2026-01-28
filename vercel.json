@@ -9,8 +9,9 @@
     { "src": "/api/batch-update", "dest": "/api/batch-update.js" },
     { "src": "/api/db", "dest": "/api/db.js" },
     { "src": "/api/unit-stats", "dest": "/api/unit-stats.js" },
-    { "src": "/api/words", "dest": "/api/words.js" },
+    { "src": "/api/words/(?<unit>[0-9]+)", "dest": "/api/words.js" },
     { "src": "/api/words/(?<id>[a-zA-Z0-9]+)", "dest": "/api/words/[id].js" },
+    { "src": "/api/words", "dest": "/api/words.js" },
     { "src": "/(.*)", "dest": "/public/$1" }
   ]
 }

@@ -50,7 +50,16 @@ export default async function handler(req, res) {
     } 
     else if (req.method === 'GET') {
       // Unit bo'yicha so'zlarni olish
-      const { unit } = req.query;
+      // URL dan: /api/words/1 yoki query dan: /api/words?unit=1
+      let unit = req.query.unit;
+      
+      // Agar URL path'dan kelsa
+      if (!unit && req.url.includes('/api/words/')) {
+        const match = req.url.match(/\/api\/words\/(\d+)/);
+        if (match) {
+          unit = match[1];
+        }
+      }
       
       if (unit) {
         const unitDoc = await Unit.findOne({ unit: parseInt(unit) });
