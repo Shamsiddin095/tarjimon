@@ -156,7 +156,9 @@ self.addEventListener('message', event => {
   }
 
   if (event.data && event.data.type === 'VERSION_CHECK') {
-    event.ports[0].postMessage({ version: CACHE_NAME });
+    if (event.ports && event.ports.length > 0) {
+      event.ports[0].postMessage({ version: CACHE_NAME });
+    }
   }
 });
 

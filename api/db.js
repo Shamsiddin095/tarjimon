@@ -10,6 +10,10 @@ export async function connectToDatabase() {
     return { conn: cachedConnection, db: cachedDb };
   }
 
+  if (!process.env.MONGO_URI) {
+    throw new Error('MONGO_URI environment variable not set');
+  }
+
   const conn = await mongoose.connect(process.env.MONGO_URI, {
     bufferCommands: false,
     maxPoolSize: 10,
