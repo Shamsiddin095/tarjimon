@@ -3,9 +3,11 @@ import mongoose from 'mongoose';
 
 let cachedConnection = null;
 let cachedDb = null;
+let connectionPromise = null;
 
 export async function connectToDatabase() {
-  if (cachedConnection && cachedDb) {
+  // Agar connection tayyor bo'lsa, uni qaytarish
+  if (cachedConnection && mongoose.connection.readyState === 1) {
     console.log('🔄 Using cached MongoDB connection');
     return { conn: cachedConnection, db: cachedDb };
   }
@@ -14,17 +16,31 @@ export async function connectToDatabase() {
     throw new Error('MONGO_URI environment variable not set');
   }
 
-  const conn = await mongoose.connect(process.env.MONGO_URI, {
+  // Agar connection jarayoni davom etsa, uni kuting
+  if (connectionPromise) {
+    console.log('⏳ Waiting for existing connection...');
+    return connectionPromise;
+  }
+
+  // Yangi connection yaratish
+  connectionPromise = mongoose.connect(process.env.MONGO_URI, {
     bufferCommands: false,
     maxPoolSize: 10,
     serverSelectionTimeoutMS: 5000,
+  }).then(conn => {
+    cachedConnection = conn;
+    cachedDb = conn.connection.db;
+    console.log('✅ New MongoDB connection established');
+    return { conn, db: cachedDb };
+  }).catch(err => {
+    // Connection xatosi bo'lsa, cache'ni reset qilish
+    connectionPromise = null;
+    cachedConnection = null;
+    cachedDb = null;
+    throw err;
   });
 
-  cachedConnection = conn;
-  cachedDb = conn.connection.db;
-
-  console.log('✅ New MongoDB connection established');
-  return { conn, db: cachedDb };
+  return connectionPromise;
 }
 
 // Schemas
