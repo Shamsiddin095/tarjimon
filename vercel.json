@@ -1,56 +1,16 @@
 {
   "version": 2,
-  "buildCommand": "echo 'Build complete'",
-  "env": {
-    "MONGO_URI": "@vocab_app_mongo_uri",
-    "NODE_ENV": "production"
-  },
-  "functions": {
-    "api/**/*.js": {
-      "maxDuration": 30,
-      "memory": 1024
-    }
-  },
-  "rewrites": [
-    {
-      "source": "/api/batch-update",
-      "destination": "/api/batch-update.js"
-    },
-    {
-      "source": "/api/unit-stats",
-      "destination": "/api/unit-stats.js"
-    },
-    {
-      "source": "/api/all-words",
-      "destination": "/api/all-words.js"
-    },
-    {
-      "source": "/api/words",
-      "destination": "/api/words.js"
-    },
-    {
-      "source": "/api/words/:id",
-      "destination": "/api/words/[id].js"
-    },
-    {
-      "source": "/manifest.json",
-      "destination": "/public/manifest.json"
-    },
-    {
-      "source": "/sw.js",
-      "destination": "/public/sw.js"
-    },
-    {
-      "source": "/styles.css",
-      "destination": "/public/styles.css"
-    },
-    {
-      "source": "/script.js",
-      "destination": "/public/script.js"
-    },
-    {
-      "source": "/((?!api).*)",
-      "destination": "/public/index.html"
-    }
+  "builds": [
+    { "src": "api/**/*.js", "use": "@vercel/node" },
+    { "src": "public/**/*", "use": "@vercel/static" }
+  ],
+  "routes": [
+    { "src": "/api/all-words", "dest": "/api/all-words.js" },
+    { "src": "/api/batch-update", "dest": "/api/batch-update.js" },
+    { "src": "/api/db", "dest": "/api/db.js" },
+    { "src": "/api/unit-stats", "dest": "/api/unit-stats.js" },
+    { "src": "/api/words", "dest": "/api/words.js" },
+    { "src": "/api/words/(?<id>[a-zA-Z0-9]+)", "dest": "/api/words/[id].js" },
+    { "src": "/(.*)", "dest": "/public/$1" }
   ]
 }

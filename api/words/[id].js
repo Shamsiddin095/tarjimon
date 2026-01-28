@@ -1,11 +1,10 @@
 import { connectToDatabase, getModels } from '../db.js';
-import mongoose from 'mongoose';
 
 export default async function handler(req, res) {
   // CORS headers
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,PUT,OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
   res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
 
   if (req.method === 'OPTIONS') {
@@ -15,61 +14,64 @@ export default async function handler(req, res) {
 
   try {
     await connectToDatabase();
-    const { Unit, UnitStats } = getModels();
+    const { Unit } = getModels();
     const { id } = req.query;
 
-    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ error: 'ID noto\'g\'ri' });
-    }
-
-    if (req.method === 'PUT') {
-      // So'zning statusini yangilash
-      const { unit, ...updateData } = req.body;
+    if (req.method === 'GET') {
+      // So'z ID'si bo'yicha olish
+      const units = await Unit.find();
       
-      // Unit document'ni topish
-      const unitDoc = await Unit.findOne({ unit: parseInt(unit) });
-      if (!unitDoc) {
-        return res.status(404).json({ error: 'Unit topilmadi' });
+      for (const unitDoc of units) {
+        const word = unitDoc.words.find(w => w._id.toString() === id);
+        if (word) {
+          return res.json({
+            ...word.toObject(),
+            unit: unitDoc.unit
+          });
+        }
       }
-
-      // So'zni topib o'zgartirivish
-      const wordIndex = unitDoc.words.findIndex(w => w._id.toString() === id);
-      if (wordIndex === -1) {
-        return res.status(404).json({ error: 'So\'z topilmadi' });
-      }
-
-      // Update data
-      Object.assign(unitDoc.words[wordIndex], updateData);
-      unitDoc.updatedAt = new Date();
-      await unitDoc.save();
-
-      res.status(200).json(unitDoc.words[wordIndex]);
+      
+      return res.status(404).json({ error: 'So\'z topilmadi' });
     } 
-    else if (req.method === 'GET') {
-      // Unit document'ni topish va so'zni qaytarish
-      const { unit } = req.query;
+    else if (req.method === 'PUT') {
+      // So'zni yangilash
+      const { gameMode1, gameMode2, gameMode3, status } = req.body;
+      const updateData = {};
+
+      if (gameMode1 !== undefined) updateData.gameMode1 = gameMode1;
+      if (gameMode2 !== undefined) updateData.gameMode2 = gameMode2;
+      if (gameMode3 !== undefined) updateData.gameMode3 = gameMode3;
+      if (status !== undefined) updateData.status = status;
+
+      // Barcha unitlarni topib kerakli so'zni topish va update qilish
+      let updated = null;
+      const units = await Unit.find();
       
-      if (!unit) {
-        return res.status(400).json({ error: 'unit parameter kerak' });
+      for (const unitDoc of units) {
+        const wordIndex = unitDoc.words.findIndex(w => w._id.toString() === id);
+        if (wordIndex !== -1) {
+          Object.assign(unitDoc.words[wordIndex], updateData);
+          unitDoc.updatedAt = new Date();
+          await unitDoc.save();
+          updated = {
+            ...unitDoc.words[wordIndex].toObject(),
+            unit: unitDoc.unit
+          };
+          break;
+        }
       }
-
-      const unitDoc = await Unit.findOne({ unit: parseInt(unit) });
-      if (!unitDoc) {
-        return res.status(404).json({ error: 'Unit topilmadi' });
-      }
-
-      const word = unitDoc.words.find(w => w._id.toString() === id);
-      if (!word) {
+      
+      if (!updated) {
         return res.status(404).json({ error: 'So\'z topilmadi' });
       }
-
-      res.status(200).json(word);
+      
+      res.json(updated);
     } 
     else {
       res.status(405).json({ error: 'Method not allowed' });
     }
-  } catch (err) {
-    console.error('API Xatosi:', err);
-    res.status(500).json({ error: 'Xato: ' + err.message });
+  } catch (error) {
+    console.error('API error:', error);
+    res.status(500).json({ error: error.message });
   }
 }
