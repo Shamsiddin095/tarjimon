@@ -1,3 +1,132 @@
+// Global search functionality
+let allWordsForSearch = [];
+
+// ============== ADD WORDS TOGGLE ==============
+document.getElementById('toggle-add-words-btn').addEventListener('click', () => {
+    const section = document.getElementById('add-words-section');
+    const btn = document.getElementById('toggle-add-words-btn');
+    section.style.display = 'block';
+    btn.style.display = 'none';
+});
+
+document.getElementById('close-add-words-btn').addEventListener('click', () => {
+    const section = document.getElementById('add-words-section');
+    const btn = document.getElementById('toggle-add-words-btn');
+    section.style.display = 'none';
+    btn.style.display = 'block';
+});
+
+// ============== SEARCH FUNCTIONALITY ==============
+
+// Search input listener
+document.getElementById('global-search-input').addEventListener('input', debounceSearch);
+
+function debounceSearch(e) {
+    const query = e.target.value.trim().toLowerCase();
+    
+    if (query.length === 0) {
+        document.getElementById('search-results-overlay').style.display = 'none';
+        document.getElementById('search-results-modal').style.display = 'none';
+        return;
+    }
+    
+    if (query.length < 2) {
+        return;
+    }
+    
+    performSearch(query);
+}
+
+function performSearch(query) {
+    const results = [];
+    
+    // Barcha so'zlardan qidirish
+    allWordsForSearch.forEach(word => {
+        let relevance = 0;
+        let matchedText = '';
+        let translation = '';
+        
+        // English bo'yicha qidirish
+        if (word.english.toLowerCase().includes(query)) {
+            relevance = word.english.toLowerCase().startsWith(query) ? 100 : 50;
+            matchedText = word.english;
+            translation = word.uzbek;
+        }
+        // Uzbek bo'yicha qidirish
+        else if (word.uzbek.toLowerCase().includes(query)) {
+            relevance = word.uzbek.toLowerCase().startsWith(query) ? 100 : 50;
+            matchedText = word.uzbek;
+            translation = word.english;
+        }
+        
+        if (relevance > 0) {
+            results.push({
+                ...word,
+                relevance,
+                matchedText,
+                translation
+            });
+        }
+    });
+    
+    // Relevance bo'yicha sort qilish
+    results.sort((a, b) => b.relevance - a.relevance);
+    
+    // Max 10 ta natija ko'rsatish
+    const topResults = results.slice(0, 10);
+    
+    displaySearchResults(topResults, query);
+}
+
+function displaySearchResults(results, query) {
+    const overlay = document.getElementById('search-results-overlay');
+    const modal = document.getElementById('search-results-modal');
+    const container = document.getElementById('search-results-container');
+    
+    overlay.style.display = 'block';
+    modal.style.display = 'block';
+    
+    if (results.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: #999;">Topilmadi</p>';
+        return;
+    }
+    
+    container.innerHTML = results.map(word => `
+        <div style="
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #f5f5f5;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+            cursor: pointer;
+            transition: all 0.3s;
+        " onmouseover="this.style.background='#e3f2fd'" onmouseout="this.style.background='#f5f5f5'">
+            <div style="font-weight: bold; color: #667eea; margin-bottom: 5px; font-size: 16px;">
+                ${word.english}
+            </div>
+            <div style="color: #666; font-size: 14px;">
+                🇺🇿 ${word.uzbek}
+            </div>
+            <div style="color: #999; font-size: 12px; margin-top: 5px;">
+                📚 Unit ${word.unit}
+            </div>
+        </div>
+    `).join('');
+}
+
+// Close search modal
+document.getElementById('search-results-overlay').addEventListener('click', () => {
+    document.getElementById('search-results-overlay').style.display = 'none';
+    document.getElementById('search-results-modal').style.display = 'none';
+    document.getElementById('global-search-input').value = '';
+});
+
+document.getElementById('close-search-results').addEventListener('click', () => {
+    document.getElementById('search-results-overlay').style.display = 'none';
+    document.getElementById('search-results-modal').style.display = 'none';
+    document.getElementById('global-search-input').value = '';
+});
+
 // Yangi so'z qo'shish uchun input qo'shish
 document.getElementById('add-more-words').addEventListener('click', function() {
     const container = document.getElementById('word-inputs-container');
@@ -76,6 +205,10 @@ document.getElementById('save-words').addEventListener('click', async function()
             wordInputRows[i].remove();
         }
         
+        // Container yopish va tugmani ko'rsatish
+        document.getElementById('add-words-section').style.display = 'none';
+        document.getElementById('toggle-add-words-btn').style.display = 'block';
+        
         setTimeout(() => loadUnits(), 1000);
     } else if (errorCount > 0) {
         showNotification(`${errorCount} ta so'z saqlanmadi`, 'error');
@@ -99,12 +232,23 @@ async function loadUnits() {
         
         const allWords = await wordsRes.json();
         const allStats = await statsRes.json();
+        
+        // Search uchun barcha so'zlarni saqlab qo'yish
+        allWordsForSearch = allWords;
+        
         console.log('✅ So\'zlar yuklandi:', allWords);
         console.log('📊 Unit stats yuklandi:', allStats);
 
         const unitSet = new Set(allWords.map(w => w.unit));
         const unitsList = document.getElementById('units-list');
         unitsList.innerHTML = '';
+        
+        // Flex layout qo'shish
+        unitsList.style.display = 'flex';
+        unitsList.style.flexWrap = 'wrap';
+        unitsList.style.gap = '10px';
+        unitsList.style.justifyContent = 'flex-start';
+        unitsList.style.alignItems = 'flex-start';
 
         if (unitSet.size === 0) {
             unitsList.innerHTML = '<p>Hali hech qanday unit yo\'q</p>';
@@ -131,19 +275,21 @@ async function loadUnits() {
             const overallPercentage = hasStats ? Math.max(mode1Percentage, mode2Percentage, mode3Percentage) : 0;
             
             const button = document.createElement('button');
-            button.style.padding = '15px 20px';
-            button.style.margin = '10px 5px';
+            button.style.padding = '10px 15px';
+            button.style.margin = '0';
             button.style.cursor = 'pointer';
-            button.style.fontSize = '16px';
+            button.style.fontSize = '13px';
             button.style.fontWeight = 'bold';
             button.style.borderRadius = '8px';
             button.style.border = 'none';
             button.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
             button.style.color = 'white';
             button.style.transition = 'all 0.3s';
+            button.style.minWidth = '120px';
+            button.style.textAlign = 'center';
             
             // 3 ta game mode foyizi ko'rsatish
-            let modeInfo = `<span style="font-size: 11px; display: block; margin-top: 5px;">`;
+            let modeInfo = `<span style="font-size: 9px; display: block; margin-top: 3px;">`;
             modeInfo += `📋 ${mode1Percentage}% | `;
             modeInfo += `✏️ ${mode2Percentage}% | `;
             modeInfo += `⚡ ${mode3Percentage}%`;
@@ -151,13 +297,13 @@ async function loadUnits() {
             
             // Umumiy completion foyizi ko'rsatish
             if (overallPercentage === 100) {
-                button.innerHTML = `Unit ${unit}<br><span style="font-size: 12px;">✅ 100% - Yodlandi!</span>${modeInfo}`;
+                button.innerHTML = `Unit ${unit}<br><span style="font-size: 10px;">✅ 100%!</span>${modeInfo}`;
                 button.style.background = 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)';
             } else if (overallPercentage > 0) {
-                button.innerHTML = `Unit ${unit}<br><span style="font-size: 12px;">⏳ ${overallPercentage}% - Yodlanmoqda...</span>${modeInfo}`;
+                button.innerHTML = `Unit ${unit}<br><span style="font-size: 10px;">⏳ ${overallPercentage}%</span>${modeInfo}`;
                 button.style.background = 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)';
             } else {
-                button.innerHTML = `Unit ${unit}<br><span style="font-size: 12px;">📚 Boshlash</span>${modeInfo}`;
+                button.innerHTML = `Unit ${unit}<br><span style="font-size: 10px;">📚 Boshlash</span>${modeInfo}`;
             }
             
             button.onmouseover = () => {
@@ -298,7 +444,7 @@ async function showVerification(unit) {
 
         const rightDiv = document.createElement('div');
         rightDiv.style.cssText = 'padding: 15px; background: #fffaf0; border-radius: 10px;';
-        rightDiv.innerHTML = '<h3>🇺🇿 O\'zbekcha Tarjimasi</h3>';
+        rightDiv.innerHTML = '<h3>Uz</h3>';
 
         // To'g'ri tartibda ko'rsatish (shuffle yo'q)
         words.forEach(word => {
@@ -362,20 +508,25 @@ async function showVerification(unit) {
 }
 
 // ============================================================
-// GAME MODE 1 - JADVAL DRAG-DROP (Default)
+// GAME MODE 1 - JADVAL CLICK MATCHING
 // ============================================================
 function startGameMode1(unit, words) {
-    console.log('🎮 Game Mode 1 (Jadval Drag-Drop) boshlandi - Unit:', unit);
+    console.log('🎮 Game Mode 1 (Click Matching) boshlandi - Unit:', unit);
     const practiceSection = document.getElementById('practice-section');
     const practiceContainer = document.getElementById('practice-container');
     practiceSection.style.display = 'block';
     practiceContainer.innerHTML = '';
+
+    // answeredCorrectly Set-ni reset qilish
+    answeredCorrectly = new Set();
 
     // So'zlarni aralash tartibda
     const shuffledWords = [...words].sort(() => Math.random() - 0.5);
     const uzbekTranslations = [...words.map(w => w.uzbek)].sort(() => Math.random() - 0.5);
 
     let correctCount = 0;
+    let selectedEnglish = null; // Tanlangan inglizcha so'z
+    let selectedEnglishId = null;
     const matchMap = new Map();
     
     words.forEach(word => {
@@ -390,38 +541,52 @@ function startGameMode1(unit, words) {
 
     const leftDiv = document.createElement('div');
     leftDiv.className = 'drag-drop-column';
-    leftDiv.innerHTML = '<h3>📖 Inglizcha</h3>';
+    leftDiv.innerHTML = '<h3>En</h3>';
     
     const rightDiv = document.createElement('div');
     rightDiv.className = 'drag-drop-column';
-    rightDiv.innerHTML = '<h3>🇺🇿 O\'zbekcha</h3>';
+    rightDiv.innerHTML = '<h3>Uz</h3>';
 
-    // Chap tomon - englizcha so'zlar (draggable)
+    // Chap tomon - englizcha so'zlar (clickable)
     shuffledWords.forEach((word) => {
         const wordEl = document.createElement('div');
         wordEl.id = `word-${word._id}`;
         wordEl.className = 'word-item';
-        wordEl.draggable = true;
         wordEl.textContent = word.english;
         wordEl.setAttribute('data-word-id', word._id);
         wordEl.setAttribute('data-english', word.english);
         
-        wordEl.addEventListener('dragstart', (e) => {
-            e.dataTransfer.effectAllowed = 'copy';
-            e.dataTransfer.setData('text/plain', word.english);
-            wordEl.style.opacity = '0.5';
-            wordEl.style.cursor = 'grabbing';
-        });
+        // Click handler - so'zni tanlash
+        wordEl.addEventListener('click', (e) => {
+            e.stopPropagation();
+            
+            // Agar allaqachon javob bo'lsa, bosmang
+            if (wordEl.classList.contains('answered-correctly')) {
+                return;
+            }
 
-        wordEl.addEventListener('dragend', (e) => {
-            wordEl.style.opacity = '1';
-            wordEl.style.cursor = 'grab';
+            // Oldingi tanlangan so'zni unselect qilish
+            if (selectedEnglishId) {
+                const prevElement = document.getElementById(`word-${selectedEnglishId}`);
+                if (prevElement) {
+                    prevElement.style.background = 'linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)';
+                    prevElement.style.border = '2px solid #2196F3';
+                    prevElement.style.boxShadow = 'none';
+                }
+            }
+
+            // Yangi so'zni select qilish
+            selectedEnglish = word.english;
+            selectedEnglishId = word._id;
+            wordEl.style.background = 'linear-gradient(135deg, #bbdefb 0%, #90caf9 100%)';
+            wordEl.style.border = '3px solid #1976d2';
+            wordEl.style.boxShadow = '0 0 15px rgba(25, 118, 210, 0.5)';
         });
 
         leftDiv.appendChild(wordEl);
     });
 
-    // O'ng tomon - o'zbekcha tarjimalar (drop zones)
+    // O'ng tomon - o'zbekcha tarjimalar (clickable)
     uzbekTranslations.forEach((translation) => {
         const translationEl = document.createElement('div');
         translationEl.className = 'word-item';
@@ -431,7 +596,6 @@ function startGameMode1(unit, words) {
             cursor: pointer;
             margin: 8px 0;
             user-select: none;
-
             min-height: 30px;
             font-weight: bold;
             transition: all 0.2s;
@@ -439,58 +603,82 @@ function startGameMode1(unit, words) {
         translationEl.textContent = translation;
         translationEl.setAttribute('data-translation', translation);
         
-        // Drop events
-        translationEl.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            e.dataTransfer.dropEffect = 'copy';
-            translationEl.style.background = '#fff59d';
-            translationEl.style.boxShadow = '0 0 10px rgba(255, 152, 0, 0.5)';
-        });
-
-        translationEl.addEventListener('dragleave', (e) => {
-            translationEl.style.background = '#fff3e0';
-            translationEl.style.boxShadow = 'none';
-        });
-
-        translationEl.addEventListener('drop', async (e) => {
-            e.preventDefault();
+        // Click handler - javobni tekshirish
+        translationEl.addEventListener('click', (e) => {
             e.stopPropagation();
-            const englishWord = e.dataTransfer.getData('text/plain');
-            const correctTranslation = matchMap.get(englishWord);
 
-            if (translation === correctTranslation) {
-                translationEl.style.background = '#c8e6c9';
-                translationEl.style.border = '2px solid #4caf50';
-                translationEl.style.color = 'green';
-                translationEl.style.fontWeight = 'bold';
-                translationEl.style.cursor = 'not-allowed';
-                translationEl.textContent = '✅ ' + translation;
-                translationEl.style.pointerEvents = 'none';
-                
-                // To'g'ri javob berilgan so'zni track qilish
-                const wordObj = words.find(w => w.english === englishWord);
-                if (wordObj) {
-                    answeredCorrectly.add(wordObj._id);
-                }
-                
-                correctCount++;
-                document.getElementById('correct-count').textContent = correctCount;
+            // Agar bu tarjima allaqachon to'g'ri javob bo'lsa
+            if (translationEl.classList.contains('answered-correctly')) {
+                return;
+            }
 
-                // Barcha so'g'ri joylangan tekshirish
-                if (correctCount === words.length) {
+            // Agar inglizcha so'z tanlangan bo'lsa
+            if (selectedEnglish) {
+                const correctTranslation = matchMap.get(selectedEnglish);
+
+                if (translation === correctTranslation) {
+                    // ✅ TO'G'RI JAVOB
+                    translationEl.style.background = '#c8e6c9';
+                    translationEl.style.border = '2px solid #4caf50';
+                    translationEl.style.color = 'green';
+                    translationEl.style.fontWeight = 'bold';
+                    translationEl.style.cursor = 'not-allowed';
+                    translationEl.textContent = '✅ ' + translation;
+                    translationEl.classList.add('answered-correctly');
+                    translationEl.style.pointerEvents = 'none';
+                    
+                    // Englizcha so'zni disable qilish
+                    const wordObj = words.find(w => w.english === selectedEnglish);
+                    if (wordObj) {
+                        // answeredCorrectly Set-a qo'shish (foyiz hisoblanishi uchun)
+                        answeredCorrectly.add(wordObj._id);
+                        
+                        const wordElement = document.getElementById(`word-${wordObj._id}`);
+                        if (wordElement) {
+                            wordElement.style.opacity = '0.5';
+                            wordElement.style.cursor = 'not-allowed';
+                            wordElement.classList.add('answered-correctly');
+                            wordElement.style.pointerEvents = 'none';
+                            wordElement.style.background = 'linear-gradient(135deg, #e0e0e0 0%, #d0d0d0 100%)';
+                            wordElement.style.border = '2px solid #999';
+                            wordElement.style.boxShadow = 'none';
+                        }
+                    }
+                    
+                    correctCount++;
+                    document.getElementById('correct-count').textContent = correctCount;
+
+                    // Barcha so'g'ri joylangan tekshirish
+                    if (correctCount === words.length) {
+                        setTimeout(() => {
+                            completeUnit(unit, words);
+                        }, 500);
+                    }
+
+                    // Selection-ni tozalash
+                    selectedEnglish = null;
+                    selectedEnglishId = null;
+                } else {
+                    // ❌ XA'TO JAVOB
+                    translationEl.style.background = '#ffcdd2';
+                    translationEl.style.border = '2px solid #f44336';
+                    translationEl.style.color = 'red';
+                    translationEl.textContent = '❌ ' + translation;
+                    
                     setTimeout(() => {
-                        completeUnit(unit, words);
-                    }, 500);
+                        translationEl.style.background = '#fff3e0';
+                        translationEl.style.border = '2px dashed #FF9800';
+                        translationEl.style.color = 'black';
+                        translationEl.textContent = translation;
+                    }, 1500);
                 }
             } else {
-                translationEl.style.background = '#ffcdd2';
-                translationEl.style.border = '2px solid #f44336';
-                translationEl.style.color = 'red';
-                translationEl.textContent = '❌ ' + translation;
+                // Avval inglizcha so'z tanlang
+                translationEl.style.background = '#fff9c4';
+                translationEl.textContent = '⚠️ Avval inglizcha so\'z tanlang!';
+                
                 setTimeout(() => {
                     translationEl.style.background = '#fff3e0';
-                    translationEl.style.border = '2px dashed #FF9800';
-                    translationEl.style.color = 'black';
                     translationEl.textContent = translation;
                 }, 1500);
             }
@@ -502,328 +690,6 @@ function startGameMode1(unit, words) {
     gameDiv.appendChild(leftDiv);
     gameDiv.appendChild(rightDiv);
     practiceContainer.appendChild(gameDiv);
-
-    // Show Answer tugmasi
-    const showAnswerBtnContainer = document.createElement('div');
-    showAnswerBtnContainer.style.cssText = 'margin-top: 20px; display: flex; gap: 10px; justify-content: center;';
-    
-    const showAnswerBtn = document.createElement('button');
-    showAnswerBtn.textContent = '👁️ JAVOBLARNI KO\'RISH';
-    showAnswerBtn.style.cssText = `
-        padding: 12px 30px;
-        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        color: white;
-        border: none;
-        border-radius: 8px;
-        font-weight: bold;
-        font-size: 14px;
-        cursor: pointer;
-        transition: all 0.3s;
-    `;
-    
-    let answersShown = false;
-    const originalLeftHTML = leftDiv.innerHTML;
-    const originalRightHTML = rightDiv.innerHTML;
-    
-    function createCorrectOrderView() {
-        // To'g'ri tartibda so'zlar va tarjimalarni ko'rsatish
-        const correctLeftDiv = document.createElement('div');
-        correctLeftDiv.style.cssText = 'padding: 15px; background: #f0f8ff; border-radius: 10px;';
-        correctLeftDiv.innerHTML = '<h3>📖 Inglizcha</h3>';
-        
-        const correctRightDiv = document.createElement('div');
-        correctRightDiv.style.cssText = 'padding: 15px; background: #fffaf0; border-radius: 10px;';
-        correctRightDiv.innerHTML = '<h3>🇺🇿 O\'zbekcha (To\'g\'ri Javoblar)</h3>';
-        
-        // To'g'ri tartibda ko'rsatish
-        words.forEach(word => {
-            const englishEl = document.createElement('div');
-            englishEl.style.cssText = `
-                padding: 12px 15px;
-                background: #e3f2fd;
-                border-radius: 8px;
-                margin: 8px 0;
-                border-left: 4px solid #2196F3;
-                font-weight: bold;
-            `;
-            englishEl.textContent = word.english;
-            correctLeftDiv.appendChild(englishEl);
-
-            const uzbekEl = document.createElement('div');
-            uzbekEl.style.cssText = `
-                padding: 12px 15px;
-                background: #c8e6c9;
-                border-radius: 8px;
-                margin: 8px 0;
-                border-left: 4px solid #4caf50;
-                font-weight: bold;
-                color: green;
-            `;
-            uzbekEl.textContent = '✓ ' + word.uzbek;
-            correctRightDiv.appendChild(uzbekEl);
-        });
-        
-        return { correctLeftDiv, correctRightDiv };
-    }
-    
-    function createShuffledView() {
-        // Aralashtirilgan holatda qayta ko'rsatish
-        const shuffledLeftDiv = document.createElement('div');
-        shuffledLeftDiv.style.cssText = 'padding: 15px; background: #f0f8ff; border-radius: 10px;';
-        shuffledLeftDiv.innerHTML = '<h3>📖 Inglizcha</h3>';
-        
-        const shuffledRightDiv = document.createElement('div');
-        shuffledRightDiv.style.cssText = 'padding: 15px; background: #fffaf0; border-radius: 10px;';
-        shuffledRightDiv.innerHTML = '<h3>🇺🇿 O\'zbekcha</h3>';
-        
-        let selectedWord = null; // Mobile uchun tanlangan so'z
-
-        // Aralashtirilgan so'zlarni qayta qo'shish
-        shuffledWords.forEach((word) => {
-            const wordEl = document.createElement('div');
-            wordEl.id = `word-${word._id}`;
-            wordEl.draggable = true;
-            wordEl.style.cssText = `
-                padding: 12px 15px;
-                background: #e3f2fd;
-                border-radius: 8px;
-                cursor: grab;
-                margin: 8px 0;
-                user-select: none;
-                border: 2px solid #2196F3;
-                font-weight: bold;
-                transition: all 0.2s;
-                touch-action: none;
-            `;
-            wordEl.textContent = word.english;
-            wordEl.setAttribute('data-word-id', word._id);
-            wordEl.setAttribute('data-english', word.english);
-            
-            // Desktop - Drag-drop
-            wordEl.addEventListener('dragstart', (e) => {
-                e.dataTransfer.effectAllowed = 'copy';
-                e.dataTransfer.setData('text/plain', word.english);
-                wordEl.style.opacity = '0.5';
-                wordEl.style.cursor = 'grabbing';
-            });
-
-            wordEl.addEventListener('dragend', (e) => {
-                wordEl.style.opacity = '1';
-                wordEl.style.cursor = 'grab';
-            });
-
-            // Mobile - Touch select
-            wordEl.addEventListener('touchstart', (e) => {
-                selectedWord = word.english;
-                wordEl.style.background = '#64b5f6';
-                wordEl.style.boxShadow = '0 0 15px rgba(33, 150, 243, 0.8)';
-                wordEl.style.transform = 'scale(1.05)';
-            });
-
-            wordEl.addEventListener('touchend', () => {
-                if (wordEl.style.background === 'rgb(100, 181, 246)') {
-                    wordEl.style.background = '#e3f2fd';
-                    wordEl.style.boxShadow = 'none';
-                    wordEl.style.transform = 'scale(1)';
-                }
-            });
-
-            shuffledLeftDiv.appendChild(wordEl);
-        });
-
-        uzbekTranslations.forEach((translation) => {
-            const translationEl = document.createElement('div');
-            translationEl.style.cssText = `
-                padding: 12px 15px;
-                background: #fff3e0;
-                border-radius: 8px;
-                cursor: pointer;
-                margin: 8px 0;
-                user-select: none;
-                border: 2px dashed #FF9800;
-                min-height: 30px;
-                font-weight: bold;
-                transition: all 0.2s;
-                touch-action: none;
-            `;
-            translationEl.textContent = translation;
-            translationEl.setAttribute('data-translation', translation);
-            
-            // Desktop - Drag-drop
-            translationEl.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                e.dataTransfer.dropEffect = 'copy';
-                translationEl.style.background = '#fff59d';
-                translationEl.style.boxShadow = '0 0 10px rgba(255, 152, 0, 0.5)';
-            });
-
-            translationEl.addEventListener('dragleave', (e) => {
-                translationEl.style.background = '#fff3e0';
-                translationEl.style.boxShadow = 'none';
-            });
-
-            translationEl.addEventListener('drop', async (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                const englishWord = e.dataTransfer.getData('text/plain');
-                const correctTranslation = matchMap.get(englishWord);
-
-                if (translation === correctTranslation) {
-                    translationEl.style.background = '#c8e6c9';
-                    translationEl.style.border = '2px solid #4caf50';
-                    translationEl.style.color = 'green';
-                    translationEl.style.fontWeight = 'bold';
-                    translationEl.style.cursor = 'not-allowed';
-                    translationEl.textContent = '✅ ' + translation;
-                    translationEl.style.pointerEvents = 'none';
-                    
-                    correctCount++;
-                    document.getElementById('correct-count').textContent = correctCount;
-
-                    if (correctCount === words.length) {
-                        setTimeout(() => {
-                            completeUnit(unit, words);
-                        }, 500);
-                    }
-                } else {
-                    translationEl.style.background = '#ffcdd2';
-                    translationEl.style.border = '2px solid #f44336';
-                    translationEl.style.color = 'red';
-                    translationEl.textContent = '❌ ' + translation;
-                    setTimeout(() => {
-                        translationEl.style.background = '#fff3e0';
-                        translationEl.style.border = '2px dashed #FF9800';
-                        translationEl.style.color = 'black';
-                        translationEl.textContent = translation;
-                    }, 1500);
-                }
-            });
-
-            // Mobile - Tap to match
-            translationEl.addEventListener('touchstart', async (e) => {
-                if (selectedWord && translationEl.style.pointerEvents !== 'none') {
-                    const correctTranslation = matchMap.get(selectedWord);
-
-                    if (translation === correctTranslation) {
-                        translationEl.style.background = '#c8e6c9';
-                        translationEl.style.border = '2px solid #4caf50';
-                        translationEl.style.color = 'green';
-                        translationEl.style.fontWeight = 'bold';
-                        translationEl.style.cursor = 'not-allowed';
-                        translationEl.textContent = '✅ ' + translation;
-                        translationEl.style.pointerEvents = 'none';
-                        
-                        // Tanlangan so'zni o'chirish
-                        const wordEls = shuffledLeftDiv.querySelectorAll('[data-english="' + selectedWord + '"]');
-                        wordEls.forEach(el => {
-                            el.style.opacity = '0.3';
-                            el.style.pointerEvents = 'none';
-                            el.style.cursor = 'default';
-                        });
-                        
-                        // To'g'ri javob berilgan so'zni track qilish
-                        const wordObj = words.find(w => w.english === selectedWord);
-                        if (wordObj) {
-                            answeredCorrectly.add(wordObj._id);
-                        }
-                        
-                        selectedWord = null;
-                        correctCount++;
-                        document.getElementById('correct-count').textContent = correctCount;
-
-                        if (correctCount === words.length) {
-                            setTimeout(() => {
-                                completeUnit(unit, words);
-                            }, 500);
-                        }
-                    } else {
-                        translationEl.style.background = '#ffcdd2';
-                        translationEl.style.border = '2px solid #f44336';
-                        translationEl.style.color = 'red';
-                        translationEl.textContent = '❌ ' + translation;
-                        
-                        // Tanlangan so'zni qayta normal ko'rsatish
-                        const wordEls = shuffledLeftDiv.querySelectorAll('[data-english="' + selectedWord + '"]');
-                        wordEls.forEach(el => {
-                            el.style.background = '#e3f2fd';
-                            el.style.boxShadow = 'none';
-                            el.style.transform = 'scale(1)';
-                        });
-                        
-                        selectedWord = null;
-
-                        setTimeout(() => {
-                            translationEl.style.background = '#fff3e0';
-                            translationEl.style.border = '2px dashed #FF9800';
-                            translationEl.style.color = 'black';
-                            translationEl.textContent = translation;
-                        }, 1500);
-                    }
-                }
-            });
-
-            shuffledRightDiv.appendChild(translationEl);
-        });
-        
-        return { shuffledLeftDiv, shuffledRightDiv };
-    }
-    
-    function showAnswers() {
-        answersShown = true;
-        showAnswerBtn.style.opacity = '0.7';
-        showAnswerBtn.textContent = '✓ JAVOBLARNI YASHIRISH';
-        
-        // Aralashtirilgan jadvalni to'g'ri tartibiga o'zgartirish
-        const { correctLeftDiv, correctRightDiv } = createCorrectOrderView();
-        
-        const gameDiv = practiceContainer.querySelector('div[style*="grid"]');
-        if (gameDiv) {
-            gameDiv.innerHTML = '';
-            gameDiv.style.cssText = 'display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0;';
-            gameDiv.appendChild(correctLeftDiv);
-            gameDiv.appendChild(correctRightDiv);
-        }
-    }
-    
-    function hideAnswers() {
-        answersShown = false;
-        showAnswerBtn.style.opacity = '1';
-        showAnswerBtn.textContent = '👁️ JAVOBLARNI KO\'RISH';
-        
-        // Qayta aralashtirilgan holatga qaytarish
-        const gameDiv = practiceContainer.querySelector('div[style*="grid"]');
-        if (gameDiv) {
-            const { shuffledLeftDiv, shuffledRightDiv } = createShuffledView();
-            gameDiv.innerHTML = '';
-            gameDiv.style.cssText = 'display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0;';
-            gameDiv.appendChild(shuffledLeftDiv);
-            gameDiv.appendChild(shuffledRightDiv);
-        }
-    }
-    
-    // Desktop - sichqoncha uchun
-    showAnswerBtn.addEventListener('mousedown', showAnswers);
-    showAnswerBtn.addEventListener('mouseup', hideAnswers);
-    showAnswerBtn.addEventListener('mouseleave', hideAnswers);
-    
-    // Mobile - teginish uchun
-    showAnswerBtn.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        showAnswers();
-    });
-    
-    showAnswerBtn.addEventListener('touchend', (e) => {
-        e.preventDefault();
-        hideAnswers();
-    });
-    
-    showAnswerBtn.addEventListener('touchcancel', (e) => {
-        e.preventDefault();
-        hideAnswers();
-    });
-    
-    showAnswerBtnContainer.appendChild(showAnswerBtn);
-    practiceContainer.appendChild(showAnswerBtnContainer);
 
     // Hol ko'rsatish
     const statusDiv = document.createElement('div');
