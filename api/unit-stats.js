@@ -5,6 +5,7 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
 
   if (req.method === 'OPTIONS') {
     res.status(200).end();
@@ -17,38 +18,19 @@ export default async function handler(req, res) {
 
   try {
     await connectToDatabase();
-    const { UnitStats, Unit } = getModels();
+    const { Unit } = getModels();
 
-    // Barcha stats'ni olish
-    const stats = await UnitStats.find().sort({ unit: 1 });
+    const units = await Unit.find().select('unit unitName words');
     
-    // Barcha unit'larni olish
-    const units = await Unit.find().sort({ unit: 1 });
+    const unitsData = units.map(u => ({
+      unit: u.unit,
+      unitName: u.unitName || '',
+      wordCount: u.words.length
+    }));
     
-    // Stats bo'lmagan unitlar uchun default stats qo'shish
-    const unitNumbers = units.map(u => u.unit);
-    const statsByUnit = {};
-    
-    // Mavjud stats'ni map'ga qo'shish
-    stats.forEach(stat => {
-      statsByUnit[stat.unit] = stat;
-    });
-    
-    // Barcha unitlar uchun stats qaytarish (default 0 bilan yangi unitlar)
-    const allStats = unitNumbers.map(unitNum => {
-      return statsByUnit[unitNum] || {
-        unit: unitNum,
-        totalWords: 0,
-        gameMode1Avg: 0,
-        gameMode2Avg: 0,
-        gameMode3Avg: 0,
-        lastUpdated: new Date()
-      };
-    });
-    
-    res.status(200).json(allStats);
+    res.json(unitsData);
   } catch (error) {
-    console.error('API error:', error);
+    console.error('Units fetch error:', error);
     res.status(500).json({ error: error.message });
   }
 }

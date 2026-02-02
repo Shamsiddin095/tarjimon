@@ -25,6 +25,7 @@ const wordSubSchema = new mongoose.Schema({
   _id: { type: mongoose.Schema.Types.ObjectId, auto: true },
   english: { type: String, required: true },
   uzbek: { type: String, required: true },
+  description: { type: String },
   status: { type: Boolean, default: false },
   gameMode1: { type: Number, default: 0 },
   gameMode2: { type: Number, default: 0 },
@@ -35,6 +36,7 @@ const wordSubSchema = new mongoose.Schema({
 // Unit Schema - har bir unit uchun bitta document, ichida words array
 const unitSchema = new mongoose.Schema({
   unit: { type: Number, required: true, unique: true },
+  unitName: { type: String, default: '' },
   words: [wordSubSchema],
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
@@ -58,20 +60,24 @@ const UnitStats = mongoose.model('UnitStats', unitStatsSchema);
 // Yangi so'z qo'shish (unit ichiga)
 app.post('/api/words', async (req, res) => {
   try {
-    const { english, uzbek, unit } = req.body;
+    const { english, uzbek, description, unit, unitName } = req.body;
     
     // Unit document'ni topish yoki yaratish
     let unitDoc = await Unit.findOne({ unit });
     
     if (!unitDoc) {
       // Yangi unit document yaratish
-      unitDoc = new Unit({ unit, words: [] });
+      unitDoc = new Unit({ unit, unitName: unitName || '', words: [] });
+    } else if (unitName) {
+      // Unit nomi yangilandi bo'lsa
+      unitDoc.unitName = unitName;
     }
     
     // Yangi so'zni words array'ga qo'shish
     const newWord = {
       english,
       uzbek,
+      description: description || '',
       status: false,
       gameMode1: 0,
       gameMode2: 0,
@@ -262,12 +268,30 @@ app.get('/api/all-words', async (req, res) => {
       unitDoc.words.forEach(word => {
         allWords.push({
           ...word.toObject(),
-          unit: unitDoc.unit
+          unit: unitDoc.unit,
+          unitName: unitDoc.unitName || ''
         });
       });
     });
     
     res.json(allWords);
+  } catch (err) {
+    res.status(400).json('Xato: ' + err.message);
+  }
+});
+
+// Barcha unitlarni olish (unit raqam va nom bilan)
+app.get('/api/units', async (req, res) => {
+  try {
+    const units = await Unit.find().select('unit unitName words');
+    
+    const unitsData = units.map(u => ({
+      unit: u.unit,
+      unitName: u.unitName || '',
+      wordCount: u.words.length
+    }));
+    
+    res.json(unitsData);
   } catch (err) {
     res.status(400).json('Xato: ' + err.message);
   }
@@ -286,10 +310,121 @@ app.get('/api/unit-stats', async (req, res) => {
 // Bitta unit stats olish
 app.get('/api/unit-stats/:unit', async (req, res) => {
   try {
-    const stats = await UnitStats.findOne({ unit: parseInt(req.params.unit) });
+    const stats = await UnitStats.findOne({ unit: parseFloat(req.params.unit) });
     res.json(stats || { unit: req.params.unit, gameMode1Avg: 0, gameMode2Avg: 0, gameMode3Avg: 0 });
   } catch (err) {
     res.status(400).json('Xato: ' + err.message);
+  }
+});
+
+// So'z o'chirish
+app.delete('/api/word-action', async (req, res) => {
+  try {
+    const unit = parseFloat(req.query.unit);
+    const wordId = req.query.wordId;
+
+    if (!unit || !wordId) {
+      return res.status(400).json({ error: 'Unit va wordId kerak' });
+    }
+
+    const unitDoc = await Unit.findOne({ unit });
+    if (!unitDoc) {
+      return res.status(404).json({ error: 'Unit topilmadi' });
+    }
+
+    // So'zni o'chirish
+    unitDoc.words = unitDoc.words.filter(w => w._id.toString() !== wordId);
+    unitDoc.updatedAt = new Date();
+    await unitDoc.save();
+
+    res.json({ success: true, message: "So'z o'chirildi" });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// So'zni tahrirlash (unit o'zgartirish ham mumkin)
+app.put('/api/word-action', async (req, res) => {
+  try {
+    const oldUnit = parseFloat(req.query.oldUnit);
+    const wordId = req.query.wordId;
+    const { english, uzbek, description, newUnit, unitName } = req.body;
+
+    console.log('📝 PUT /api/word-action received:', {
+      oldUnit,
+      wordId,
+      body: { english, uzbek, description, newUnit, unitName }
+    });
+
+    if (!oldUnit || !wordId) {
+      return res.status(400).json({ error: 'Unit va wordId kerak' });
+    }
+
+    const oldUnitDoc = await Unit.findOne({ unit: oldUnit });
+    if (!oldUnitDoc) {
+      return res.status(404).json({ error: 'Unit topilmadi' });
+    }
+
+    console.log('📚 Old unit found:', { unit: oldUnitDoc.unit, unitName: oldUnitDoc.unitName, wordCount: oldUnitDoc.words.length });
+
+    // So'zni topish
+    const word = oldUnitDoc.words.find(w => w._id.toString() === wordId);
+    if (!word) {
+      return res.status(404).json({ error: "So'z topilmadi" });
+    }
+
+    // Agar unit o'zgargan bo'lsa, so'zni yangi unit'ga ko'chirish
+    if (newUnit && newUnit !== oldUnit) {
+      console.log('🔄 Unit o\'zgartirilmoqda:', oldUnit, '→', newUnit);
+      // Eski unit'dan o'chirish
+      oldUnitDoc.words = oldUnitDoc.words.filter(w => w._id.toString() !== wordId);
+      oldUnitDoc.updatedAt = new Date();
+      await oldUnitDoc.save();
+
+      // Yangi unit'ga qo'shish
+      let newUnitDoc = await Unit.findOne({ unit: newUnit });
+      if (!newUnitDoc) {
+        newUnitDoc = new Unit({ unit: newUnit, unitName: unitName || '', words: [] });
+      } else if (unitName) {
+        newUnitDoc.unitName = unitName;
+      }
+
+      newUnitDoc.words.push({
+        english,
+        uzbek,
+        description,
+        status: word.status,
+        gameMode1: word.gameMode1,
+        gameMode2: word.gameMode2,
+        gameMode3: word.gameMode3
+      });
+      newUnitDoc.updatedAt = new Date();
+      await newUnitDoc.save();
+
+      // Stats'larni o'chirish
+      await UnitStats.deleteOne({ unit: oldUnit });
+      await UnitStats.deleteOne({ unit: newUnit });
+      
+      console.log('✅ Unit ko\'chirildi va unitName yangilandi:', newUnitDoc.unitName);
+    } else {
+      // Faqat so'zni yangilash
+      console.log('✏️ Faqat so\'z yangilanmoqda. UnitName:', unitName);
+      word.english = english;
+      word.uzbek = uzbek;
+      word.description = description;
+      if (unitName !== undefined) {
+        console.log('🔄 UnitName yangilanmoqda:', oldUnitDoc.unitName, '→', unitName);
+        oldUnitDoc.unitName = unitName;
+      }
+      oldUnitDoc.updatedAt = new Date();
+      await oldUnitDoc.save();
+      console.log('✅ So\'z va unit saqlandi. Yangi unitName:', oldUnitDoc.unitName);
+    }
+
+    res.json({ success: true, message: "So'z yangilandi" });
+  } catch (err) {
+    console.error('❌ Word action error:', err);
+    res.status(400).json({ error: err.message });
   }
 });
 

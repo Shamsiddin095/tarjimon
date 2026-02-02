@@ -48,6 +48,7 @@ const wordSubSchema = new mongoose.Schema({
   _id: { type: mongoose.Schema.Types.ObjectId, auto: true },
   english: { type: String, required: true },
   uzbek: { type: String, required: true },
+  description: { type: String, default: null }, // So'z tavsifi
   status: { type: Boolean, default: false },
   gameMode1: { type: Number, default: 0 },
   gameMode2: { type: Number, default: 0 },
@@ -57,6 +58,7 @@ const wordSubSchema = new mongoose.Schema({
 
 const unitSchema = new mongoose.Schema({
   unit: { type: Number, required: true, unique: true },
+  unitName: { type: String, default: '' },
   words: [wordSubSchema],
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }

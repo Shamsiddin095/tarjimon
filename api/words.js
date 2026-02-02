@@ -18,7 +18,7 @@ export default async function handler(req, res) {
 
     if (req.method === 'POST') {
       // Yangi so'z qo'shish
-      const { english, uzbek, unit } = req.body;
+      const { english, uzbek, unit, description } = req.body;
       
       if (!english || !uzbek || !unit) {
         return res.status(400).json({ error: 'Barcha maydonlar to\'ldirilishi kerak' });
@@ -33,6 +33,7 @@ export default async function handler(req, res) {
       const newWord = {
         english,
         uzbek,
+        description: description || null, // Tavsif bo'lsa qo'shish
         status: false,
         gameMode1: 0,
         gameMode2: 0,

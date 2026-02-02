@@ -4,10 +4,10 @@ const RUNTIME_CACHE = 'vocab-app-runtime-v1';
 
 const ASSETS_TO_CACHE = [
   '/',
-  '/index.html',
-  '/script.js',
-  '/styles.css',
-  '/manifest.json'
+  './index.html',
+  './script.js',
+  './styles.css',
+  './manifest.json'
 ];
 
 // Installation - assets'ni cache'da saqlab qo'yish
@@ -53,8 +53,8 @@ self.addEventListener('fetch', event => {
     event.respondWith(
       fetch(request)
         .then(response => {
-          // Response'ni cache'da saqlab qo'yish
-          if (response.ok) {
+          // Response'ni cache'da saqlab qo'yish (faqat GET so'rovlar)
+          if (response.ok && request.method === 'GET') {
             const cacheClone = response.clone();
             caches.open(RUNTIME_CACHE).then(cache => {
               cache.put(request, cacheClone);
