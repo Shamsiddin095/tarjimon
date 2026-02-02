@@ -110,18 +110,60 @@ function speakWord(word, language = 'en') {
         utterance.lang = 'en-US';
     }
     
-    utterance.rate = 0.9; // Tez emas, diqqat bilan
-    utterance.pitch = 1;
+    utterance.rate = 0.85; // Biroz sekinroq
+    utterance.pitch = 0.9; // Pastroq ton - erkak ovozi
     utterance.volume = 1;
     
-    // O'g'il bola ovozini tanlash
+    // Erkak ovozini tanlash
     const voices = window.speechSynthesis.getVoices();
-    const maleVoice = voices.find(voice => voice.name.includes('Male') || voice.name.includes('male'));
-    if (maleVoice) {
-        utterance.voice = maleVoice;
+    
+    // Avval til bo'yicha erkak ovozni qidirish
+    let selectedVoice = null;
+    
+    if (language === 'uz') {
+        // O'zbek tili uchun
+        selectedVoice = voices.find(v => 
+            (v.lang.includes('uz') || v.lang.includes('tr') || v.lang.includes('ru')) && 
+            (v.name.toLowerCase().includes('male') || v.name.toLowerCase().includes('man'))
+        );
+        // Agar topilmasa, istalgan o'zbek/turk/rus ovoz
+        if (!selectedVoice) {
+            selectedVoice = voices.find(v => v.lang.includes('uz') || v.lang.includes('tr') || v.lang.includes('ru'));
+        }
+    } else {
+        // Ingliz tili uchun erkak ovoz
+        selectedVoice = voices.find(v => 
+            v.lang.includes('en') && 
+            (v.name.toLowerCase().includes('male') || 
+             v.name.toLowerCase().includes('man') ||
+             v.name.toLowerCase().includes('david') ||
+             v.name.toLowerCase().includes('james') ||
+             v.name.toLowerCase().includes('daniel'))
+        );
+        // Agar topilmasa, istalgan ingliz ovoz
+        if (!selectedVoice) {
+            selectedVoice = voices.find(v => v.lang.includes('en-US') || v.lang.includes('en-GB'));
+        }
+    }
+    
+    if (selectedVoice) {
+        utterance.voice = selectedVoice;
+        console.log('Tanlangan ovoz:', selectedVoice.name, selectedVoice.lang);
     }
     
     window.speechSynthesis.speak(utterance);
+}
+
+// Qidiruv natijasi uchun ovoz - tarjimani aytish
+function speakSearchResult(englishWord, uzbekWord) {
+    // Til rejimiga qarab tarjimani aytish
+    if (searchLanguage === 'en-uz') {
+        // EN-UZ: inglizcha qidirilgan → o'zbekcha tarjimani aytish
+        speakWord(uzbekWord, 'uz');
+    } else {
+        // UZ-EN: o'zbekcha qidirilgan → inglizcha tarjimani aytish
+        speakWord(englishWord, 'en');
+    }
 }
 
 // ============== ADD WORDS TOGGLE ==============
@@ -214,7 +256,12 @@ function displaySearchResults(results, query) {
         return;
     }
     
-    container.innerHTML = results.map(word => `
+    container.innerHTML = results.map(word => {
+        // JavaScript string escape - birtirnoq va backslash
+        const safeEnglish = word.english.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+        const safeUzbek = word.uzbek.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+        
+        return `
         <div style="
             padding: 8px 10px;
             margin-bottom: 6px;
@@ -238,7 +285,7 @@ function displaySearchResults(results, query) {
                 </div>
             </div>
             <button 
-                onclick="speakWord('${word.english}', 'en'); speakWord('${word.uzbek}', 'uz');"
+                onclick="speakSearchResult('${safeEnglish}', '${safeUzbek}')"
                 style="
                     padding: 6px 8px;
                     background: #667eea;
@@ -258,7 +305,8 @@ function displaySearchResults(results, query) {
                 🔊
             </button>
         </div>
-    `).join('');
+    `;
+    }).join('');
     
     // Birinchi natijaning ovozida o'qib berish
     if (results.length > 0) {
