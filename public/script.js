@@ -2505,15 +2505,20 @@ async function editWord(unit, word) {
 // Determines whether to use localhost or Vercel domain
 const API_BASE_URL = () => {
   const hostname = window.location.hostname;
+  const protocol = window.location.protocol;
+  
   if (hostname === 'localhost' || hostname === '127.0.0.1') {
     return 'http://localhost:3000/api';
   }
-  // For Vercel, use relative path (same domain)
-  return '/api';
+  
+  // For production (Vercel or any hosted domain)
+  // Use the same protocol and hostname
+  return `${protocol}//${hostname}/api`;
 };
 
 // Set global API base
 window.API_BASE_URL = API_BASE_URL();
+console.log('API_BASE_URL:', window.API_BASE_URL);
 
 
 window.addEventListener('offline', () => {
