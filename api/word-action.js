@@ -15,55 +15,55 @@ export default async function handler(req, res) {
 
   try {
     await connectToDatabase();
-    const { Unit, UnitStats } = getModels();
+    const { Type, TypeStats } = getModels();
 
-    const { unit, wordId, oldUnit } = req.query;
+    const { type, wordId, oldType } = req.query;
     
-    if ((!unit && !oldUnit) || !wordId) {
-      return res.status(400).json({ error: 'Unit va wordId kerak' });
+    if ((!type && !oldType) || !wordId) {
+      return res.status(400).json({ error: 'Type va wordId kerak' });
     }
 
-    const unitNumber = parseFloat(oldUnit || unit);
-    const unitDoc = await Unit.findOne({ unit: unitNumber });
+    const typeStr = oldType || type;
+    const typeDoc = await Type.findOne({ type: typeStr });
     
-    if (!unitDoc) {
-      return res.status(404).json({ error: 'Unit topilmadi' });
+    if (!typeDoc) {
+      return res.status(404).json({ error: 'Type topilmadi' });
     }
 
     if (req.method === 'DELETE') {
       // So'zni o'chirish
-      unitDoc.words = unitDoc.words.filter(word => word._id.toString() !== wordId);
-      unitDoc.updatedAt = new Date();
-      await unitDoc.save();
+      typeDoc.words = typeDoc.words.filter(word => word._id.toString() !== wordId);
+      typeDoc.updatedAt = new Date();
+      await typeDoc.save();
       
       return res.json({ success: true, message: 'So\'z o\'chirildi' });
     } 
     else if (req.method === 'PUT' || req.method === 'PATCH') {
-      // So'zni tahrirlash (unit o'zgartirish ham mumkin)
-      const { english, uzbek, description, newUnit, unitName } = req.body;
+      // So'zni tahrirlash (type o'zgartirish ham mumkin)
+      const { english, uzbek, description, newType, displayName } = req.body;
       
-      const word = unitDoc.words.find(w => w._id.toString() === wordId);
+      const word = typeDoc.words.find(w => w._id.toString() === wordId);
       
       if (!word) {
         return res.status(404).json({ error: 'So\'z topilmadi' });
       }
       
-      // Agar unit o'zgargan bo'lsa, so'zni yangi unit'ga ko'chirish
-      if (newUnit && newUnit !== unitNumber) {
-        // Eski unit'dan o'chirish
-        unitDoc.words = unitDoc.words.filter(w => w._id.toString() !== wordId);
-        unitDoc.updatedAt = new Date();
-        await unitDoc.save();
+      // Agar type o'zgargan bo'lsa, so'zni yangi type'ga ko'chirish
+      if (newType && newType !== typeStr) {
+        // Eski type'dan o'chirish
+        typeDoc.words = typeDoc.words.filter(w => w._id.toString() !== wordId);
+        typeDoc.updatedAt = new Date();
+        await typeDoc.save();
 
-        // Yangi unit'ga qo'shish
-        let newUnitDoc = await Unit.findOne({ unit: newUnit });
-        if (!newUnitDoc) {
-          newUnitDoc = new Unit({ unit: newUnit, unitName: unitName || '', words: [] });
-        } else if (unitName) {
-          newUnitDoc.unitName = unitName;
+        // Yangi type'ga qo'shish
+        let newTypeDoc = await Type.findOne({ type: newType });
+        if (!newTypeDoc) {
+          newTypeDoc = new Type({ type: newType, displayName: displayName || '', words: [] });
+        } else if (displayName) {
+          newTypeDoc.displayName = displayName;
         }
 
-        newUnitDoc.words.push({
+        newTypeDoc.words.push({
           english,
           uzbek,
           description,
@@ -72,22 +72,22 @@ export default async function handler(req, res) {
           gameMode2: word.gameMode2,
           gameMode3: word.gameMode3
         });
-        newUnitDoc.updatedAt = new Date();
-        await newUnitDoc.save();
+        newTypeDoc.updatedAt = new Date();
+        await newTypeDoc.save();
 
         // Stats'larni o'chirish
-        await UnitStats.deleteOne({ unit: unitNumber });
-        await UnitStats.deleteOne({ unit: newUnit });
+        await TypeStats.deleteOne({ type: typeStr });
+        await TypeStats.deleteOne({ type: newType });
       } else {
         // Faqat so'zni yangilash
         word.english = english;
         word.uzbek = uzbek;
         word.description = description;
-        if (unitName !== undefined) {
-          unitDoc.unitName = unitName;
+        if (displayName !== undefined) {
+          typeDoc.displayName = displayName;
         }
-        unitDoc.updatedAt = new Date();
-        await unitDoc.save();
+        typeDoc.updatedAt = new Date();
+        await typeDoc.save();
       }
       
       return res.json({ success: true, message: 'So\'z yangilandi' });

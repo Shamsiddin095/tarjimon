@@ -4,10 +4,44 @@ import mongoose from 'mongoose';
 import path from 'path';
 import cors from 'cors';
 import { fileURLToPath } from 'url';
+import multer from 'multer';
+import fs from 'fs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app = express();
+
+// Multer configuration - audio upload uchun
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const stage = req.query.stage || 'listening';
+    const uploadDir = path.join(__dirname, 'public', 'tracks', stage);
+    
+    // Papka mavjud bo'lsa xo'zlash
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    const timestamp = Date.now();
+    const originalName = file.originalname.replace(/\s+/g, '_');
+    cb(null, `${timestamp}_${originalName}`);
+  }
+});
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('audio/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only audio files allowed'));
+    }
+  }
+});
 const PORT = process.env.PORT || 3000;
 
 // Middleware
@@ -20,7 +54,7 @@ mongoose.connect(process.env.MONGO_URI)
   .catch(err => console.error('❌ MongoDB xatosi:', err.message));
 
 // Word Schema
-// Word subdocument schema (unit ichida)
+// Word subdocument schema (type ichida)
 const wordSubSchema = new mongoose.Schema({
   _id: { type: mongoose.Schema.Types.ObjectId, auto: true },
   english: { type: String, required: true },
@@ -33,20 +67,20 @@ const wordSubSchema = new mongoose.Schema({
   date: { type: Date, default: Date.now }
 }, { _id: true });
 
-// Unit Schema - har bir unit uchun bitta document, ichida words array
-const unitSchema = new mongoose.Schema({
-  unit: { type: Number, required: true, unique: true },
-  unitName: { type: String, default: '' },
+// Type Schema - har bir type uchun bitta document, ichida words array
+const typeSchema = new mongoose.Schema({
+  type: { type: String, required: true, unique: true }, // 'mevalar', 'jihozlar', etc
+  displayName: { type: String, default: '' }, // Ko'rsatish uchun nom
   words: [wordSubSchema],
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });
 
-const Unit = mongoose.model('Unit', unitSchema);
+const Type = mongoose.model('Type', typeSchema);
 
-// UnitStats Schema - Unit bo'yicha statistika
-const unitStatsSchema = new mongoose.Schema({
-  unit: { type: Number, required: true, unique: true },
+// TypeStats Schema - Type bo'yicha statistika
+const typeStatsSchema = new mongoose.Schema({
+  type: { type: String, required: true, unique: true },
   totalWords: { type: Number, default: 0 },
   gameMode1Avg: { type: Number, default: 0 },
   gameMode2Avg: { type: Number, default: 0 },
@@ -54,23 +88,50 @@ const unitStatsSchema = new mongoose.Schema({
   lastUpdated: { type: Date, default: Date.now }
 });
 
-const UnitStats = mongoose.model('UnitStats', unitStatsSchema);
+const TypeStats = mongoose.model('TypeStats', typeStatsSchema);
+
+// Predefined vocabulary types
+const VOCABULARY_TYPES = [
+  { type: 'mevalar', displayName: '🍎 Mevalar' },
+  { type: 'jihozlar', displayName: '🔧 Jihozlar' },
+  { type: 'kasblar', displayName: '👨‍💼 Kasblar' },
+  { type: 'hayvonlar', displayName: '🐾 Hayvonlar' },
+  { type: 'raqamlar', displayName: '🔢 Raqamlar' },
+  { type: 'rangli', displayName: '🌈 Ranglar' },
+  { type: 'oilam', displayName: '👨‍👩‍👧‍👦 O\'ila Azo\'lari' },
+  { type: 'jismiy', displayName: '🏃 Jismiy Mashqlar' },
+  { type: 'taom', displayName: '🍽️ Taomlar' },
+  { type: 'uy', displayName: '🏠 Uy Narsalari' }
+];
 
 // API Routes (STATIC dan OLDIN!)
-// Yangi so'z qo'shish (unit ichiga)
+// Types listini olish
+app.get('/api/vocabulary-types', async (req, res) => {
+  try {
+    res.json(VOCABULARY_TYPES);
+  } catch (err) {
+    res.status(400).json('Xato: ' + err.message);
+  }
+});
+
+// Yangi so'z qo'shish (type ichiga)
 app.post('/api/words', async (req, res) => {
   try {
-    const { english, uzbek, description, unit, unitName } = req.body;
+    const { english, uzbek, description, type, displayName } = req.body;
     
-    // Unit document'ni topish yoki yaratish
-    let unitDoc = await Unit.findOne({ unit });
+    if (!english || !uzbek || !type) {
+      return res.status(400).json('Xato: english, uzbek, type kerak');
+    }
     
-    if (!unitDoc) {
-      // Yangi unit document yaratish
-      unitDoc = new Unit({ unit, unitName: unitName || '', words: [] });
-    } else if (unitName) {
-      // Unit nomi yangilandi bo'lsa
-      unitDoc.unitName = unitName;
+    // Type document'ni topish yoki yaratish
+    let typeDoc = await Type.findOne({ type });
+    
+    if (!typeDoc) {
+      // Yangi type document yaratish
+      typeDoc = new Type({ type, displayName: displayName || '', words: [] });
+    } else if (displayName) {
+      // Type nomi yangilandi bo'lsa
+      typeDoc.displayName = displayName;
     }
     
     // Yangi so'zni words array'ga qo'shish
@@ -84,36 +145,37 @@ app.post('/api/words', async (req, res) => {
       gameMode3: 0
     };
     
-    unitDoc.words.push(newWord);
-    unitDoc.updatedAt = new Date();
-    const saved = await unitDoc.save();
+    typeDoc.words.push(newWord);
+    typeDoc.updatedAt = new Date();
+    const saved = await typeDoc.save();
     
     // Stats'ni o'chirib tashlash (yangi so'z qo'shilganda stats 0 bo'lishi kerak)
-    await UnitStats.deleteOne({ unit });
+    await TypeStats.deleteOne({ type });
     
-    console.log(`✅ So'z qo'shildi: Unit ${unit} - ${english}`);
+    console.log(`✅ So'z qo'shildi: Type ${type} - ${english}`);
     res.json(saved);
   } catch (err) {
     res.status(400).json('Xato: ' + err.message);
   }
 });
 
-// Unit bo'yicha so'zlarni olish
-app.get('/api/words/:unit', async (req, res) => {
+// Type bo'yicha so'zlarni olish
+app.get('/api/words/:type', async (req, res) => {
   try {
-    const unitDoc = await Unit.findOne({ unit: req.params.unit });
+    const typeDoc = await Type.findOne({ type: req.params.type });
     
-    if (!unitDoc) {
+    if (!typeDoc) {
       return res.json([]);
     }
     
     // Frontend uchun words array'ni flat format'da qaytarish
-    const wordsWithUnit = unitDoc.words.map(word => ({
+    const wordsWithType = typeDoc.words.map(word => ({
       ...word.toObject(),
-      unit: unitDoc.unit
+      type: typeDoc.type,
+      displayName: typeDoc.displayName
     }));
     
-    res.json(wordsWithUnit);
+    res.json(wordsWithType);
   } catch (err) {
     res.status(400).json('Xato: ' + err.message);
   }
@@ -158,17 +220,17 @@ app.put('/api/words/:id', async (req, res) => {
     
     console.log(`🔄 Update Data:`, updateData); // Debug
     
-    // Barcha unitlarni topib kerakli so'zni topish va update qilish
+    // Barcha type'larni topib kerakli so'zni topish va update qilish
     let updated = null;
-    const units = await Unit.find();
+    const types = await Type.find();
     
-    for (const unitDoc of units) {
-      const wordIndex = unitDoc.words.findIndex(w => w._id.toString() === req.params.id);
+    for (const typeDoc of types) {
+      const wordIndex = typeDoc.words.findIndex(w => w._id.toString() === req.params.id);
       if (wordIndex !== -1) {
-        Object.assign(unitDoc.words[wordIndex], updateData);
-        unitDoc.updatedAt = new Date();
-        await unitDoc.save();
-        updated = unitDoc.words[wordIndex];
+        Object.assign(typeDoc.words[wordIndex], updateData);
+        typeDoc.updatedAt = new Date();
+        await typeDoc.save();
+        updated = typeDoc.words[wordIndex];
         break;
       }
     }
@@ -181,21 +243,21 @@ app.put('/api/words/:id', async (req, res) => {
   }
 });
 
-// Batch update - unit ichidagi so'zlarni update qilish
+// Batch update - type ichidagi so'zlarni update qilish
 app.post('/api/batch-update', async (req, res) => {
   try {
-    const { updates, unit } = req.body; // [{ id, gameMode1/2/3 }, ...], unit number
+    const { updates, type } = req.body; // [{ id, gameMode1/2/3 }, ...], type name
     
     if (!Array.isArray(updates)) {
       return res.status(400).json('Updates array bo\'lishi kerak');
     }
 
-    console.log(`📦 Batch update boshlandi: Unit ${unit}, ${updates.length} ta so'z`);
+    console.log(`📦 Batch update boshlandi: Type ${type}, ${updates.length} ta so'z`);
 
-    // Unit document'ni topish
-    const unitDoc = await Unit.findOne({ unit });
-    if (!unitDoc) {
-      return res.status(404).json('Unit topilmadi');
+    // Type document'ni topish
+    const typeDoc = await Type.findOne({ type });
+    if (!typeDoc) {
+      return res.status(404).json('Type topilmadi');
     }
 
     // Har bir update uchun so'zni topib o'zgartirivish
@@ -203,34 +265,34 @@ app.post('/api/batch-update', async (req, res) => {
     updates.forEach(update => {
       const { id, ...updateData } = update;
       
-      const wordIndex = unitDoc.words.findIndex(w => w._id.toString() === id);
+      const wordIndex = typeDoc.words.findIndex(w => w._id.toString() === id);
       if (wordIndex !== -1) {
         // So'zni update qilish
-        Object.assign(unitDoc.words[wordIndex], updateData);
+        Object.assign(typeDoc.words[wordIndex], updateData);
         updatedCount++;
       }
     });
 
-    unitDoc.updatedAt = new Date();
-    const savedDoc = await unitDoc.save();
+    typeDoc.updatedAt = new Date();
+    const savedDoc = await typeDoc.save();
 
-    // Unit stats'ni calculate qilish (faqat 0'dan katta bo'lganlari uchun)
-    const gameMode1Avg = unitDoc.words.length > 0 
-      ? Math.round(unitDoc.words.reduce((sum, w) => sum + (w.gameMode1 || 0), 0) / unitDoc.words.length) 
+    // Type stats'ni calculate qilish (faqat 0'dan katta bo'lganlari uchun)
+    const gameMode1Avg = typeDoc.words.length > 0 
+      ? Math.round(typeDoc.words.reduce((sum, w) => sum + (w.gameMode1 || 0), 0) / typeDoc.words.length) 
       : 0;
-    const gameMode2Avg = unitDoc.words.length > 0 
-      ? Math.round(unitDoc.words.reduce((sum, w) => sum + (w.gameMode2 || 0), 0) / unitDoc.words.length) 
+    const gameMode2Avg = typeDoc.words.length > 0 
+      ? Math.round(typeDoc.words.reduce((sum, w) => sum + (w.gameMode2 || 0), 0) / typeDoc.words.length) 
       : 0;
-    const gameMode3Avg = unitDoc.words.length > 0 
-      ? Math.round(unitDoc.words.reduce((sum, w) => sum + (w.gameMode3 || 0), 0) / unitDoc.words.length) 
+    const gameMode3Avg = typeDoc.words.length > 0 
+      ? Math.round(typeDoc.words.reduce((sum, w) => sum + (w.gameMode3 || 0), 0) / typeDoc.words.length) 
       : 0;
 
-    // Unit stats document'ni update qilish
-    await UnitStats.findOneAndUpdate(
-      { unit },
+    // Type stats document'ni update qilish
+    await TypeStats.findOneAndUpdate(
+      { type },
       {
-        unit,
-        totalWords: unitDoc.words.length,
+        type,
+        totalWords: typeDoc.words.length,
         gameMode1Avg,
         gameMode2Avg,
         gameMode3Avg,
@@ -260,16 +322,16 @@ app.post('/api/batch-update', async (req, res) => {
 // Barcha so'zlarni olish (flat format'da)
 app.get('/api/all-words', async (req, res) => {
   try {
-    const units = await Unit.find();
+    const types = await Type.find();
     
     // Barcha so'zlarni bitta array'da birlashtirib qaytarish
     const allWords = [];
-    units.forEach(unitDoc => {
-      unitDoc.words.forEach(word => {
+    types.forEach(typeDoc => {
+      typeDoc.words.forEach(word => {
         allWords.push({
           ...word.toObject(),
-          unit: unitDoc.unit,
-          unitName: unitDoc.unitName || ''
+          type: typeDoc.type,
+          displayName: typeDoc.displayName || ''
         });
       });
     });
@@ -280,38 +342,38 @@ app.get('/api/all-words', async (req, res) => {
   }
 });
 
-// Barcha unitlarni olish (unit raqam va nom bilan)
-app.get('/api/units', async (req, res) => {
+// Barcha type'larni olish (type va displayName bilan)
+app.get('/api/types', async (req, res) => {
   try {
-    const units = await Unit.find().select('unit unitName words');
+    const types = await Type.find().select('type displayName words');
     
-    const unitsData = units.map(u => ({
-      unit: u.unit,
-      unitName: u.unitName || '',
-      wordCount: u.words.length
+    const typesData = types.map(t => ({
+      type: t.type,
+      displayName: t.displayName || '',
+      wordCount: t.words.length
     }));
     
-    res.json(unitsData);
+    res.json(typesData);
   } catch (err) {
     res.status(400).json('Xato: ' + err.message);
   }
 });
 
-// Unit stats olish
-app.get('/api/unit-stats', async (req, res) => {
+// Type stats olish
+app.get('/api/type-stats', async (req, res) => {
   try {
-    const stats = await UnitStats.find().sort({ unit: 1 });
+    const stats = await TypeStats.find().sort({ type: 1 });
     res.json(stats);
   } catch (err) {
     res.status(400).json('Xato: ' + err.message);
   }
 });
 
-// Bitta unit stats olish
-app.get('/api/unit-stats/:unit', async (req, res) => {
+// Bitta type stats olish
+app.get('/api/type-stats/:type', async (req, res) => {
   try {
-    const stats = await UnitStats.findOne({ unit: parseFloat(req.params.unit) });
-    res.json(stats || { unit: req.params.unit, gameMode1Avg: 0, gameMode2Avg: 0, gameMode3Avg: 0 });
+    const stats = await TypeStats.findOne({ type: req.params.type });
+    res.json(stats || { type: req.params.type, gameMode1Avg: 0, gameMode2Avg: 0, gameMode3Avg: 0 });
   } catch (err) {
     res.status(400).json('Xato: ' + err.message);
   }
@@ -320,22 +382,22 @@ app.get('/api/unit-stats/:unit', async (req, res) => {
 // So'z o'chirish
 app.delete('/api/word-action', async (req, res) => {
   try {
-    const unit = parseFloat(req.query.unit);
+    const type = req.query.type;
     const wordId = req.query.wordId;
 
-    if (!unit || !wordId) {
-      return res.status(400).json({ error: 'Unit va wordId kerak' });
+    if (!type || !wordId) {
+      return res.status(400).json({ error: 'Type va wordId kerak' });
     }
 
-    const unitDoc = await Unit.findOne({ unit });
-    if (!unitDoc) {
-      return res.status(404).json({ error: 'Unit topilmadi' });
+    const typeDoc = await Type.findOne({ type });
+    if (!typeDoc) {
+      return res.status(404).json({ error: 'Type topilmadi' });
     }
 
     // So'zni o'chirish
-    unitDoc.words = unitDoc.words.filter(w => w._id.toString() !== wordId);
-    unitDoc.updatedAt = new Date();
-    await unitDoc.save();
+    typeDoc.words = typeDoc.words.filter(w => w._id.toString() !== wordId);
+    typeDoc.updatedAt = new Date();
+    await typeDoc.save();
 
     res.json({ success: true, message: "So'z o'chirildi" });
   } catch (err) {
@@ -343,53 +405,53 @@ app.delete('/api/word-action', async (req, res) => {
   }
 });
 
-// So'zni tahrirlash (unit o'zgartirish ham mumkin)
+// So'zni tahrirlash (type o'zgartirish ham mumkin)
 app.put('/api/word-action', async (req, res) => {
   try {
-    const oldUnit = parseFloat(req.query.oldUnit);
+    const oldType = req.query.oldType;
     const wordId = req.query.wordId;
-    const { english, uzbek, description, newUnit, unitName } = req.body;
+    const { english, uzbek, description, newType, displayName } = req.body;
 
     console.log('📝 PUT /api/word-action received:', {
-      oldUnit,
+      oldType,
       wordId,
-      body: { english, uzbek, description, newUnit, unitName }
+      body: { english, uzbek, description, newType, displayName }
     });
 
-    if (!oldUnit || !wordId) {
-      return res.status(400).json({ error: 'Unit va wordId kerak' });
+    if (!oldType || !wordId) {
+      return res.status(400).json({ error: 'Type va wordId kerak' });
     }
 
-    const oldUnitDoc = await Unit.findOne({ unit: oldUnit });
-    if (!oldUnitDoc) {
-      return res.status(404).json({ error: 'Unit topilmadi' });
+    const oldTypeDoc = await Type.findOne({ type: oldType });
+    if (!oldTypeDoc) {
+      return res.status(404).json({ error: 'Type topilmadi' });
     }
 
-    console.log('📚 Old unit found:', { unit: oldUnitDoc.unit, unitName: oldUnitDoc.unitName, wordCount: oldUnitDoc.words.length });
+    console.log('📚 Old type found:', { type: oldTypeDoc.type, displayName: oldTypeDoc.displayName, wordCount: oldTypeDoc.words.length });
 
     // So'zni topish
-    const word = oldUnitDoc.words.find(w => w._id.toString() === wordId);
+    const word = oldTypeDoc.words.find(w => w._id.toString() === wordId);
     if (!word) {
       return res.status(404).json({ error: "So'z topilmadi" });
     }
 
-    // Agar unit o'zgargan bo'lsa, so'zni yangi unit'ga ko'chirish
-    if (newUnit && newUnit !== oldUnit) {
-      console.log('🔄 Unit o\'zgartirilmoqda:', oldUnit, '→', newUnit);
-      // Eski unit'dan o'chirish
-      oldUnitDoc.words = oldUnitDoc.words.filter(w => w._id.toString() !== wordId);
-      oldUnitDoc.updatedAt = new Date();
-      await oldUnitDoc.save();
+    // Agar type o'zgargan bo'lsa, so'zni yangi type'ga ko'chirish
+    if (newType && newType !== oldType) {
+      console.log('🔄 Type o\'zgartirilmoqda:', oldType, '→', newType);
+      // Eski type'dan o'chirish
+      oldTypeDoc.words = oldTypeDoc.words.filter(w => w._id.toString() !== wordId);
+      oldTypeDoc.updatedAt = new Date();
+      await oldTypeDoc.save();
 
-      // Yangi unit'ga qo'shish
-      let newUnitDoc = await Unit.findOne({ unit: newUnit });
-      if (!newUnitDoc) {
-        newUnitDoc = new Unit({ unit: newUnit, unitName: unitName || '', words: [] });
-      } else if (unitName) {
-        newUnitDoc.unitName = unitName;
+      // Yangi type'ga qo'shish
+      let newTypeDoc = await Type.findOne({ type: newType });
+      if (!newTypeDoc) {
+        newTypeDoc = new Type({ type: newType, displayName: displayName || '', words: [] });
+      } else if (displayName) {
+        newTypeDoc.displayName = displayName;
       }
 
-      newUnitDoc.words.push({
+      newTypeDoc.words.push({
         english,
         uzbek,
         description,
@@ -398,33 +460,267 @@ app.put('/api/word-action', async (req, res) => {
         gameMode2: word.gameMode2,
         gameMode3: word.gameMode3
       });
-      newUnitDoc.updatedAt = new Date();
-      await newUnitDoc.save();
+      newTypeDoc.updatedAt = new Date();
+      await newTypeDoc.save();
 
       // Stats'larni o'chirish
-      await UnitStats.deleteOne({ unit: oldUnit });
-      await UnitStats.deleteOne({ unit: newUnit });
+      await TypeStats.deleteOne({ type: oldType });
+      await TypeStats.deleteOne({ type: newType });
       
-      console.log('✅ Unit ko\'chirildi va unitName yangilandi:', newUnitDoc.unitName);
+      console.log('✅ Type ko\'chirildi va displayName yangilandi:', newTypeDoc.displayName);
     } else {
       // Faqat so'zni yangilash
-      console.log('✏️ Faqat so\'z yangilanmoqda. UnitName:', unitName);
+      console.log('✏️ Faqat so\'z yangilanmoqda. DisplayName:', displayName);
       word.english = english;
       word.uzbek = uzbek;
       word.description = description;
-      if (unitName !== undefined) {
-        console.log('🔄 UnitName yangilanmoqda:', oldUnitDoc.unitName, '→', unitName);
-        oldUnitDoc.unitName = unitName;
+      if (displayName !== undefined) {
+        console.log('🔄 DisplayName yangilanmoqda:', oldTypeDoc.displayName, '→', displayName);
+        oldTypeDoc.displayName = displayName;
       }
-      oldUnitDoc.updatedAt = new Date();
-      await oldUnitDoc.save();
-      console.log('✅ So\'z va unit saqlandi. Yangi unitName:', oldUnitDoc.unitName);
+      oldTypeDoc.updatedAt = new Date();
+      await oldTypeDoc.save();
+      console.log('✅ So\'z va type saqlandi. Yangi displayName:', oldTypeDoc.displayName);
     }
 
     res.json({ success: true, message: "So'z yangilandi" });
   } catch (err) {
     console.error('❌ Word action error:', err);
     res.status(400).json({ error: err.message });
+  }
+});
+
+// ==========================================
+// IELTS TRAINING ROUTES
+// ==========================================
+
+// IELTS Schemas
+const audioTrackSchema = new mongoose.Schema({
+  stage: { type: String, enum: ['listening', 'reading', 'writing', 'speaking'], required: true },
+  fileName: { type: String, required: true },
+  displayName: { type: String, required: true },
+  duration: Number,
+  uploadedAt: { type: Date, default: Date.now },
+  isDefault: { type: Boolean, default: false }
+});
+
+const ieltsTrainingSchema = new mongoose.Schema({
+  stage: { type: String, enum: ['listening', 'reading', 'writing', 'speaking'], required: true },
+  title: { type: String, required: true },
+  description: String,
+  audioTrack: { type: mongoose.Schema.Types.ObjectId, ref: 'AudioTrack' },
+  audioPath: String,
+  section: Number,
+  content: String,
+  questions: [{
+    type: { type: String, required: true },
+    questionText: String,
+    options: [String],
+    correctAnswer: String,
+    orderNumber: Number
+  }],
+  timeLimit: { type: Number, required: true },
+  difficulty: { type: String, enum: ['easy', 'medium', 'hard'], default: 'medium' },
+  createdAt: { type: Date, default: Date.now }
+});
+
+const ieltsProgressSchema = new mongoose.Schema({
+  userId: String,
+  training: { type: mongoose.Schema.Types.ObjectId, ref: 'IELTSTraining', required: true },
+  gameMode: { type: String, enum: ['practice', 'exam', 'challenge'], required: true },
+  answers: [{
+    questionIndex: Number,
+    userAnswer: String,
+    isCorrect: Boolean,
+    timeTaken: Number
+  }],
+  rawScore: Number,
+  bandScore: Number,
+  aiFeedback: {
+    taskAchievement: Number,
+    vocabulary: Number,
+    grammar: Number,
+    coherence: Number,
+    fluency: Number,
+    pronunciation: Number,
+    feedback: String
+  },
+  timeSpent: Number,
+  completedAt: { type: Date, default: Date.now }
+});
+
+const AudioTrack = mongoose.model('AudioTrack', audioTrackSchema);
+const IELTSTraining = mongoose.model('IELTSTraining', ieltsTrainingSchema);
+const IELTSProgress = mongoose.model('IELTSProgress', ieltsProgressSchema);
+
+// Audio Tracks
+app.get('/api/ielts-audio', async (req, res) => {
+  try {
+    const { stage } = req.query;
+    const query = stage ? { stage } : {};
+    const tracks = await AudioTrack.find(query).sort({ uploadedAt: -1 });
+    res.json(tracks);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Audio upload endpoint - file va metadata bilan
+app.post('/api/ielts-audio', upload.single('audioFile'), async (req, res) => {
+  try {
+    const { stage, displayName, duration } = req.body;
+    
+    // Agar file yuklangan bo'lsa, file name'ni ishlatish
+    let fileName;
+    if (req.file) {
+      fileName = req.file.filename;
+    } else {
+      // Agar file yuklash bo'lmasa, body dan fileName olish (backward compatibility)
+      fileName = req.body.fileName || `default_${Date.now()}.mp3`;
+    }
+    
+    const existing = await AudioTrack.findOne({ stage, fileName });
+    if (existing) {
+      return res.status(400).json({ error: 'Audio allaqachon mavjud' });
+    }
+    
+    const track = new AudioTrack({ 
+      stage, 
+      fileName, 
+      displayName: displayName || 'Untitled',
+      duration: duration || 0, 
+      isDefault: false 
+    });
+    
+    await track.save();
+    
+    res.status(201).json({ 
+      message: 'Audio muvaffaqiyatli yuklandi', 
+      track,
+      audioPath: `/tracks/${stage}/${fileName}`
+    });
+  } catch (err) {
+    console.error('Audio upload error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET audio tracks
+app.get('/api/ielts-audio', async (req, res) => {
+  try {
+    const { stage } = req.query;
+    const query = stage ? { stage } : {};
+    const tracks = await AudioTrack.find(query).sort({ uploadedAt: -1 });
+    res.json(tracks);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Delete audio track
+app.delete('/api/ielts-audio', async (req, res) => {
+  try {
+    const { id } = req.query;
+    const track = await AudioTrack.findByIdAndDelete(id);
+    
+    // Agar file fizik tarzda mavjud bo'lsa, uni o'chirish
+    if (track && track.fileName && track.fileName !== 'default.mp3') {
+      const filePath = path.join(__dirname, 'public', 'tracks', track.stage, track.fileName);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+    }
+    
+    res.json({ message: 'Audio o\'chirildi' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// IELTS Trainings
+app.get('/api/ielts-trainings', async (req, res) => {
+  try {
+    const { stage } = req.query;
+    const query = stage ? { stage } : {};
+    const trainings = await IELTSTraining.find(query).populate('audioTrack').sort({ createdAt: -1 });
+    res.json(trainings);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/ielts-trainings', async (req, res) => {
+  try {
+    const { stage, title, description, audioTrackId, section, content, questions, timeLimit, difficulty } = req.body;
+    
+    let audioPath = null;
+    if (audioTrackId) {
+      const track = await AudioTrack.findById(audioTrackId);
+      if (track) audioPath = `/tracks/${track.stage}/${track.fileName}`;
+    } else {
+      audioPath = `/tracks/${stage}/default.mp3`;
+    }
+    
+    const training = new IELTSTraining({
+      stage, title, description,
+      audioTrack: audioTrackId || null,
+      audioPath, section, content,
+      questions: questions || [],
+      timeLimit,
+      difficulty: difficulty || 'medium'
+    });
+    
+    await training.save();
+    res.status(201).json({ message: 'Training yaratildi', training });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/ielts-trainings', async (req, res) => {
+  try {
+    const { id } = req.query;
+    await IELTSTraining.findByIdAndDelete(id);
+    res.json({ message: 'Training o\'chirildi' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// IELTS Progress
+app.get('/api/ielts-progress', async (req, res) => {
+  try {
+    const { trainingId, userId } = req.query;
+    const query = {};
+    if (trainingId) query.training = trainingId;
+    if (userId) query.userId = userId;
+    
+    const progress = await IELTSProgress.find(query).populate('training').sort({ completedAt: -1 });
+    res.json(progress);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/ielts-progress', async (req, res) => {
+  try {
+    const { userId, trainingId, gameMode, answers, rawScore, bandScore, aiFeedback, timeSpent } = req.body;
+    
+    const progress = new IELTSProgress({
+      userId: userId || 'guest',
+      training: trainingId,
+      gameMode,
+      answers: answers || [],
+      rawScore: rawScore || 0,
+      bandScore: bandScore || 0,
+      aiFeedback: aiFeedback || {},
+      timeSpent: timeSpent || 0
+    });
+    
+    await progress.save();
+    res.status(201).json({ message: 'Natija saqlandi', progress });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 

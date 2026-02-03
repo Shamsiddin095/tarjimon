@@ -1,6 +1,7 @@
 // Global search functionality
 let allWordsForSearch = [];
-let allUnitsData = []; // Unit ma'lumotlari uchun
+let allTypesData = []; // Type ma'lumotlari uchun
+let vocabularyTypes = []; // Predefined types
 
 // ============== LANGUAGE SETTINGS ==============
 let searchLanguage = 'uz-en'; // Default: UZ-EN (o'zbek'dan inglizcha'ga)
@@ -166,21 +167,6 @@ function speakSearchResult(englishWord, uzbekWord) {
     }
 }
 
-// ============== ADD WORDS TOGGLE ==============
-document.getElementById('toggle-add-words-btn').addEventListener('click', () => {
-    const section = document.getElementById('add-words-section');
-    const btn = document.getElementById('toggle-add-words-btn');
-    section.style.display = 'block';
-    btn.style.display = 'none';
-});
-
-document.getElementById('close-add-words-btn').addEventListener('click', () => {
-    const section = document.getElementById('add-words-section');
-    const btn = document.getElementById('toggle-add-words-btn');
-    section.style.display = 'none';
-    btn.style.display = 'block';
-});
-
 // ============== SEARCH FUNCTIONALITY ==============
 
 // Search input listener
@@ -336,181 +322,72 @@ document.getElementById('close-search-results').addEventListener('click', () => 
     document.getElementById('global-search-input').value = '';
 });
 
-// Yangi so'z qo'shish uchun input qo'shish
-document.getElementById('add-more-words').addEventListener('click', function() {
-    const container = document.getElementById('word-inputs-container');
-    const newRow = document.createElement('div');
-    newRow.className = 'word-input-row';
-    newRow.style.cssText = `
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        margin-bottom: 15px;
-        padding: 10px;
-        background: #f9f9f9;
-        border-radius: 6px;
-        border-left: 3px solid #667eea;
-    `;
-    newRow.innerHTML = `
-        <div style="display: flex; gap: 10px;">
-            <input type="text" class="english-input" placeholder="Inglizcha" style="flex: 1;">
-            <input type="text" class="uzbek-input" placeholder="O'zbekcha" style="flex: 1;">
-        </div>
-        <input type="text" class="word-description-input" placeholder="Tavsif (ixtiyoriy)" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-    `;
-    container.appendChild(newRow);
-});
-
-// Saqlash tugmasi
-document.getElementById('save-words').addEventListener('click', async function() {
-    const unitNumber = document.getElementById('unit-number').value;
-    const unitName = document.getElementById('unit-name-input').value.trim();
-    const inputs = document.querySelectorAll('.word-input-row');
-    const message = document.getElementById('save-message');
-
-    console.log('💾 Saqlash boshlandi - Unit:', unitNumber, 'Inputlar:', inputs.length);
-
-    if (!unitNumber) {
-        message.textContent = '❌ Unit raqamini kiriting!';
-        message.style.color = 'red';
-        return;
-    }
-
-    let savedCount = 0;
-    let errorCount = 0;
-
-    for (let row of inputs) {
-        const english = row.querySelector('.english-input').value.trim();
-        const uzbek = row.querySelector('.uzbek-input').value.trim();
-        // Har bir so'zning o'zining description'i
-        const description = row.querySelector('.word-description-input').value.trim();
-
-        if (english && uzbek) {
-            try {
-                console.log('📤 So\'z yuborilmoqda:', { english, uzbek, unit: unitNumber, unitName, description });
-                const response = await fetch(`${window.API_BASE_URL}/words`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        english, 
-                        uzbek, 
-                        unit: parseFloat(unitNumber),
-                        unitName: unitName || '',
-                        description: description || null // Har bir so'zning description'i
-                    })
-                });
-
-                console.log('Response status:', response.status, response.statusText);
-
-                if (response.ok) {
-                    const result = await response.json();
-                    console.log('✅ So\'z saqlandi:', result);
-                    savedCount++;
-                    row.querySelector('.english-input').value = '';
-                    row.querySelector('.uzbek-input').value = '';
-                    row.querySelector('.word-description-input').value = '';
-                } else {
-                    const error = await response.text();
-                    console.error('❌ Server xatosi:', error);
-                    errorCount++;
-                }
-            } catch (err) {
-                console.error('❌ Xato:', err);
-                errorCount++;
-            }
-        }
-    }
-
-    if (savedCount > 0) {
-        showNotification(`${savedCount} ta so'z saqlandi!`, 'success');
-        
-        // Barcha inputlarni tozalash
-        const allInputs = document.querySelectorAll('.english-input, .uzbek-input');
-        allInputs.forEach(input => input.value = '');
-        
-        // Unit raqami va nomini tozalash
-        document.getElementById('unit-number').value = '';
-        document.getElementById('unit-name-input').value = '';
-        
-        // Qo'shimcha qatorlarni olib tashlash (faqat birinchi qatorni qoldirish)
-        const wordInputRows = document.querySelectorAll('.word-input-row');
-        for (let i = 1; i < wordInputRows.length; i++) {
-            wordInputRows[i].remove();
-        }
-        
-        // Container yopish va tugmani ko'rsatish
-        document.getElementById('add-words-section').style.display = 'none';
-        document.getElementById('toggle-add-words-btn').style.display = 'block';
-        
-        setTimeout(() => loadUnits(), 1000);
-    } else if (errorCount > 0) {
-        showNotification(`${errorCount} ta so'z saqlanmadi`, 'error');
-    } else {
-        showNotification('Hech qanday so\'z kiritilmadi!', 'info');
-    }
-});
-
-// Unitlarni yuklash va ko'rsatish
-async function loadUnits() {
+// Vocabulary types'ni yuklash va dropdown'ga to'ldirish
+async function loadVocabularyTypes() {
     try {
-        console.log('📍 loadUnits ishga tushdi - API ga request yuborilmoqda...');
-        const [wordsRes, statsRes, unitsRes] = await Promise.all([
+        const response = await fetch(`${window.API_BASE_URL}/vocabulary-types`);
+        if (!response.ok) throw new Error('Failed to load vocabulary types');
+        
+        vocabularyTypes = await response.json();
+        console.log('✅ Vocabulary types yuklandi:', vocabularyTypes);
+    } catch (err) {
+        console.error('❌ Vocabulary types yuklashda xato:', err);
+    }
+}
+
+// Type'larni yuklash va ko'rsatish
+async function loadTypes() {
+    try {
+        console.log('📍 loadTypes ishga tushdi - API ga request yuborilmoqda...');
+        const [wordsRes, statsRes, typesRes] = await Promise.all([
             fetch(`${window.API_BASE_URL}/all-words`),
-            fetch(`${window.API_BASE_URL}/unit-stats`),
-            fetch(`${window.API_BASE_URL}/units`)
+            fetch(`${window.API_BASE_URL}/type-stats`),
+            fetch(`${window.API_BASE_URL}/types`)
         ]);
         
-        if (!wordsRes.ok || !statsRes.ok || !unitsRes.ok) {
+        if (!wordsRes.ok || !statsRes.ok || !typesRes.ok) {
             throw new Error(`API Error`);
         }
         
         const allWords = await wordsRes.json();
         const allStats = await statsRes.json();
-        const allUnits = await unitsRes.json();
+        const allTypes = await typesRes.json();
         
         // Search uchun barcha so'zlarni saqlab qo'yish
         allWordsForSearch = allWords;
-        allUnitsData = allUnits; // Global saqlash
+        allTypesData = allTypes; // Global saqlash
         
         console.log('✅ So\'zlar yuklandi:', allWords);
-        console.log('📊 Unit stats yuklandi:', allStats);
-        console.log('📚 Units yuklandi:', allUnits);
+        console.log('📊 Type stats yuklandi:', allStats);
+        console.log('📚 Types yuklandi:', allTypes);
 
-        const unitSet = new Set(allWords.map(w => w.unit));
-        const unitsList = document.getElementById('units-list');
-        unitsList.innerHTML = '';
+        const typesList = document.getElementById('units-list');
+        typesList.innerHTML = '';
         
         // Vertikal layout
-        unitsList.style.display = 'flex';
-        unitsList.style.flexDirection = 'column';
-        unitsList.style.gap = '10px';
-        unitsList.style.width = '100%';
+        typesList.style.display = 'flex';
+        typesList.style.flexDirection = 'column';
+        typesList.style.gap = '10px';
+        typesList.style.width = '100%';
 
-        if (unitSet.size === 0) {
-            unitsList.innerHTML = '<p>Hali hech qanday unit yo\'q</p>';
-            return;
-        }
-
-        // Unitlarni sort qilish
-        const sortedUnits = Array.from(unitSet).sort((a, b) => a - b);
-
-        sortedUnits.forEach(unit => {
-            // Unit ma'lumotlarini olish
-            const unitData = allUnits.find(u => u.unit === unit);
-            const unitName = unitData?.unitName || '';
+        // BARCHA PREDEFINED TYPES'NI KO'RSATISH (BO'SH YOKI TO'LIQ)
+        vocabularyTypes.forEach((typeObj, index) => {
+            const type = typeObj.type;
+            const displayName = typeObj.displayName || type;
             
-            // Unit stats'dan foydalanish (yangi unit uchun default 0)
-            const unitStat = allStats.find(s => s.unit === unit);
-            const mode1Percentage = unitStat?.gameMode1Avg || 0;
-            const mode2Percentage = unitStat?.gameMode2Avg || 0;
-            const mode3Percentage = unitStat?.gameMode3Avg || 0;
+            // Type ma'lumotlarini olish
+            const typeWords = allWords.filter(w => w.type === type);
+            const wordCount = typeWords.length;
             
-            const hasStats = unitStat && (mode1Percentage > 0 || mode2Percentage > 0 || mode3Percentage > 0);
-            const overallPercentage = hasStats ? Math.max(mode1Percentage, mode2Percentage, mode3Percentage) : 0;
+            // Type stats'dan foydalanish (yangi type uchun default 0)
+            const typeStat = allStats.find(s => s.type === type);
+            const mode1Percentage = typeStat?.gameMode1Avg || 0;
+            const mode2Percentage = typeStat?.gameMode2Avg || 0;
+            const mode3Percentage = typeStat?.gameMode3Avg || 0;
             
             // Accordion container
             const accordion = document.createElement('div');
-            accordion.className = 'unit-accordion';
+            accordion.className = 'type-accordion';
             accordion.style.cssText = `
                 width: 100%;
                 border-radius: 8px;
@@ -518,7 +395,7 @@ async function loadUnits() {
                 box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             `;
             
-            // Unit header (button) - har doim oq fonda qora yozuv, pastda progress liniya
+            // Type header (button)
             const header = document.createElement('button');
             header.style.cssText = `
                 width: 100%;
@@ -540,7 +417,7 @@ async function loadUnits() {
                 border-bottom: none;
             `;
             
-            // Progress bar container - tugma pastida
+            // Progress bar container
             const progressBarContainer = document.createElement('div');
             progressBarContainer.style.cssText = `
                 position: absolute;
@@ -553,30 +430,27 @@ async function loadUnits() {
             `;
             
             // Har bir so'zning 3 ta game mode - har biri 33.3%
-            let unitProgress = 0;
-            if (allWords && allWords.length > 0) {
-                const unitWords = allWords.filter(w => w.unit === unit);
-                if (unitWords.length > 0) {
-                    let totalProgress = 0;
-                    unitWords.forEach(word => {
-                        let wordProgress = 0;
-                        // Har game mode 100% bo'lsa 33.3% qo'shiladi
-                        if ((word.gameMode1 || 0) >= 100) wordProgress += 33.33;
-                        if ((word.gameMode2 || 0) >= 100) wordProgress += 33.33;
-                        if ((word.gameMode3 || 0) >= 100) wordProgress += 33.34;
-                        totalProgress += wordProgress;
-                    });
-                    unitProgress = Math.round(totalProgress / unitWords.length);
-                }
+            let typeProgress = 0;
+            if (typeWords.length > 0) {
+                let totalProgress = 0;
+                typeWords.forEach(word => {
+                    let wordProgress = 0;
+                    // Har game mode 100% bo'lsa 33.3% qo'shiladi
+                    if ((word.gameMode1 || 0) >= 100) wordProgress += 33.33;
+                    if ((word.gameMode2 || 0) >= 100) wordProgress += 33.33;
+                    if ((word.gameMode3 || 0) >= 100) wordProgress += 33.34;
+                    totalProgress += wordProgress;
+                });
+                typeProgress = Math.round(totalProgress / typeWords.length);
             }
             
-            // Progress fill bar - rangi foyizga qarab o'zgaradi
+            // Progress fill bar
             let progressColor = '#f44336'; // Qizil (0-30%)
-            if (unitProgress > 30 && unitProgress <= 70) {
+            if (typeProgress > 30 && typeProgress <= 70) {
                 progressColor = '#ffc107'; // Sariq (30-70%)
-            } else if (unitProgress > 70 && unitProgress < 90) {
+            } else if (typeProgress > 70 && typeProgress < 90) {
                 progressColor = '#667eea'; // Ko'k (70-90%)
-            } else if (unitProgress >= 90) {
+            } else if (typeProgress >= 90) {
                 progressColor = '#4caf50'; // Yashil (90-100%)
             }
             
@@ -584,7 +458,7 @@ async function loadUnits() {
             progressFill.style.cssText = `
                 height: 100%;
                 background: ${progressColor};
-                width: ${unitProgress}%;
+                width: ${typeProgress}%;
                 transition: width 0.3s ease, background 0.3s ease;
                 border-radius: 0;
             `;
@@ -604,11 +478,12 @@ async function loadUnits() {
             
             const textContent = document.createElement('div');
             textContent.innerHTML = `
-                <div style="font-size: 18px;">
-                    Unit ${unit} - ${unitName || '📚 Mavzu kiritilmagan'}
+                <div style="font-size: 18px; display: flex; align-items: center; gap: 10px;">
+                    <span>${displayName}</span>
+                    <span style="font-size: 12px; color: #999;">(${wordCount} so'z)</span>
                 </div>
                 <div style="font-size: 12px; color: #999; margin-top: 3px;">
-                    ${unitProgress > 0 ? unitProgress + '% Yodlandi' : '0% Boshlang\'ich'}
+                    ${typeProgress > 0 ? typeProgress + '% Yodlandi' : '0% Boshlang\'ich'}
                 </div>
             `;
             contentWrapper.appendChild(textContent);
@@ -616,19 +491,20 @@ async function loadUnits() {
             const arrow = document.createElement('span');
             arrow.className = 'accordion-arrow';
             arrow.style.cssText = 'font-size: 20px; transition: transform 0.3s;';
-            arrow.textContent = '▼';
+            arrow.textContent = '▲';
             contentWrapper.appendChild(arrow);
             
             header.appendChild(contentWrapper);
             
             // Store update function
             header._updateProgressBar = function(newProgress) {
-                unitProgress = newProgress;
+                typeProgress = newProgress;
                 progressFill.style.width = newProgress + '%';
                 progressFill.style.background = newProgress === 100 ? '#4caf50' : '#667eea';
                 textContent.innerHTML = `
-                    <div style="font-size: 18px;">
-                        Unit ${unit} - ${unitName || '📚 Mavzu kiritilmagan'}
+                    <div style="font-size: 18px; display: flex; align-items: center; gap: 10px;">
+                        <span>${displayName}</span>
+                        <span style="font-size: 12px; color: #999;">(${wordCount} so'z)</span>
                     </div>
                     <div style="font-size: 12px; color: #999; margin-top: 3px;">
                         ${newProgress > 0 ? newProgress + '% Yodlandi' : '0% Boshlang\'ich'}
@@ -638,7 +514,7 @@ async function loadUnits() {
             
             // Content container
             const content = document.createElement('div');
-            content.className = 'unit-content';
+            content.className = 'type-content';
             content.style.cssText = `
                 max-height: 0;
                 overflow: hidden;
@@ -655,10 +531,22 @@ async function loadUnits() {
                     header.querySelector('.accordion-arrow').style.transform = 'rotate(0deg)';
                     isOpen = false;
                 } else {
-                    // Ochish
+                    // Avval barcha ochiq accordion'larni yopish
+                    const allAccordions = document.querySelectorAll('.type-accordion');
+                    allAccordions.forEach(acc => {
+                        const accContent = acc.querySelector('.type-content');
+                        const accHeader = acc.querySelector('.type-header');
+                        const accArrow = accHeader?.querySelector('.accordion-arrow');
+                        if (accContent && accContent.style.maxHeight !== '0px' && accContent !== content) {
+                            accContent.style.maxHeight = '0';
+                            if (accArrow) accArrow.style.transform = 'rotate(0deg)';
+                        }
+                    });
+                    
+                    // Hozirgi accordion'ni ochish
                     if (!content.hasChildNodes()) {
                         content.innerHTML = '<div style="padding: 20px; text-align: center;">⏳ Yuklanmoqda...</div>';
-                        await loadUnitContent(unit, content);
+                        await loadTypeContent(type, content);
                     }
                     content.style.maxHeight = content.scrollHeight + 'px';
                     header.querySelector('.accordion-arrow').style.transform = 'rotate(180deg)';
@@ -680,39 +568,47 @@ async function loadUnits() {
             
             accordion.appendChild(header);
             accordion.appendChild(content);
-            unitsList.appendChild(accordion);
+            typesList.appendChild(accordion);
         });
         
-        // Scroll to units section
+        // Scroll to types section
         setTimeout(() => {
-            const unitsSection = document.getElementById('units-section');
-            if (unitsSection) {
-                unitsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            const typesSection = document.getElementById('units-section');
+            if (typesSection) {
+                typesSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
         }, 100);
         
     } catch (err) {
-        console.error('❌ Unitlarni yuklashda xato:', err);
+        console.error('❌ Typelarni yuklashda xato:', err);
         document.getElementById('units-list').innerHTML = `<p style="color:red;">Xato: ${err.message}</p>`;
     }
 }
 
-// Unit content'ni yuklash (so'zlar va game mode'lar)
-async function loadUnitContent(unit, container) {
+// Type content'ni yuklash (so'zlar va game mode'lar)
+async function loadTypeContent(type, container) {
     try {
-        const response = await fetch(`${window.API_BASE_URL}/words/${unit}`);
+        const response = await fetch(`${window.API_BASE_URL}/words/${type}`);
         const words = await response.json();
         
         container.innerHTML = '';
         
-        // Progress section - foiz ko'rsatgichi
+        // TOP SECTION - Progress va Add button birgalikda
+        const topSection = document.createElement('div');
+        topSection.style.cssText = `
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            gap: 10px;
+        `;
+        
+        // Progress section - CHAP TARAFDA, 3 ta game mode foizi
         const progressSection = document.createElement('div');
         progressSection.style.cssText = `
-            padding: 15px 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 8px;
-            margin-bottom: 15px;
-            color: white;
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
         `;
         
         // Har bir game mode uchun foiz hisoblash
@@ -728,23 +624,133 @@ async function loadUnitContent(unit, container) {
         const mode3Percent = words.length > 0 ? Math.round((mode3Total / words.length) / 100 * 100) : 0;
         
         progressSection.innerHTML = `
-            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px;">
-                <div style="text-align: center;">
-                    <div style="font-size: 24px; font-weight: bold;">${mode1Percent}%</div>
-                    <div style="font-size: 12px; opacity: 0.9;">📋 Game 1</div>
-                </div>
-                <div style="text-align: center;">
-                    <div style="font-size: 24px; font-weight: bold;">${mode2Percent}%</div>
-                    <div style="font-size: 12px; opacity: 0.9;">✏️ Game 2</div>
-                </div>
-                <div style="text-align: center;">
-                    <div style="font-size: 24px; font-weight: bold;">${mode3Percent}%</div>
-                    <div style="font-size: 12px; opacity: 0.9;">⚡ Game 3</div>
-                </div>
+            <div style="background: white; padding: 6px 10px; border-radius: 5px; border: 1px solid #ddd; text-align: center; min-width: 60px;">
+                <div style="font-size: 14px; font-weight: bold; color: black;">${mode1Percent}%</div>
+                <div style="font-size: 9px; color: #666;">Game 1</div>
+            </div>
+            <div style="background: white; padding: 6px 10px; border-radius: 5px; border: 1px solid #ddd; text-align: center; min-width: 60px;">
+                <div style="font-size: 14px; font-weight: bold; color: black;">${mode2Percent}%</div>
+                <div style="font-size: 9px; color: #666;">Game 2</div>
+            </div>
+            <div style="background: white; padding: 6px 10px; border-radius: 5px; border: 1px solid #ddd; text-align: center; min-width: 60px;">
+                <div style="font-size: 14px; font-weight: bold; color: black;">${mode3Percent}%</div>
+                <div style="font-size: 9px; color: #666;">Game 3</div>
             </div>
         `;
         
-        container.appendChild(progressSection);
+        topSection.appendChild(progressSection);
+        
+        // ADD WORD BUTTON - O'NG TARAFDA, KICHIK
+        const toggleAddBtn = document.createElement('button');
+        toggleAddBtn.innerHTML = '➕';
+        toggleAddBtn.title = 'So\'z Qo\'shish';
+        toggleAddBtn.style.cssText = `
+            padding: 8px 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+            flex-shrink: 0;
+        `;
+        toggleAddBtn.onmouseover = () => toggleAddBtn.style.background = '#764ba2';
+        toggleAddBtn.onmouseout = () => toggleAddBtn.style.background = '#667eea';
+        
+        topSection.appendChild(toggleAddBtn);
+        container.appendChild(topSection);
+        
+        // ADD WORD FORM SECTION (HIDDEN BY DEFAULT)
+        const addWordSection = document.createElement('div');
+        addWordSection.style.cssText = `
+            padding: 15px;
+            background: #f9f9f9;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            display: none;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease, padding 0.3s ease;
+        `;
+        
+        addWordSection.innerHTML = `
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                <div style="display: flex; gap: 8px;">
+                    <input type="text" class="type-english-input" placeholder="Inglizcha" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                    <input type="text" class="type-uzbek-input" placeholder="O'zbekcha" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                </div>
+                <input type="text" class="type-description-input" placeholder="Tavsif (ixtiyoriy)" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                <button class="add-word-to-type" style="padding: 10px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
+                    💾 Qo'shish
+                </button>
+            </div>
+        `;
+        
+        // Toggle form visibility
+        let isFormOpen = false;
+        toggleAddBtn.onclick = () => {
+            isFormOpen = !isFormOpen;
+            if (isFormOpen) {
+                addWordSection.style.display = 'block';
+                addWordSection.style.maxHeight = addWordSection.scrollHeight + 'px';
+                toggleAddBtn.innerHTML = '➖';
+            } else {
+                addWordSection.style.maxHeight = '0';
+                setTimeout(() => {
+                    addWordSection.style.display = 'none';
+                }, 300);
+                toggleAddBtn.innerHTML = '➕';
+            }
+        };
+        
+        // Add word button event handler
+        const addBtn = addWordSection.querySelector('.add-word-to-type');
+        const englishInput = addWordSection.querySelector('.type-english-input');
+        const uzbekInput = addWordSection.querySelector('.type-uzbek-input');
+        const descInput = addWordSection.querySelector('.type-description-input');
+        
+        addBtn.addEventListener('click', async () => {
+            const english = englishInput.value.trim();
+            const uzbek = uzbekInput.value.trim();
+            const description = descInput.value.trim();
+            
+            if (!english || !uzbek) {
+                showNotification('❌ Inglizcha va o\'zbekcha kiriting!', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${window.API_BASE_URL}/words`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        english,
+                        uzbek,
+                        type,
+                        description: description || null
+                    })
+                });
+                
+                if (response.ok) {
+                    showNotification(`✅ "${english}" qo'shildi!`, 'success');
+                    englishInput.value = '';
+                    uzbekInput.value = '';
+                    descInput.value = '';
+                    
+                    // So'z ro'yxatini qayta yuklash
+                    await loadTypes();
+                } else {
+                    showNotification('❌ So\'z qo\'shishda xato!', 'error');
+                }
+            } catch (err) {
+                console.error('Xato:', err);
+                showNotification('❌ Xato yuz berdi!', 'error');
+            }
+        });
+        
+        container.appendChild(addWordSection);
         
         // Verification section
         const verificationSection = document.createElement('div');
@@ -756,7 +762,7 @@ async function loadUnitContent(unit, container) {
         verificationSection.innerHTML = `<h3 style="margin: 0 0 15px 0; color: #667eea;">📚 So'zlar ro'yxati</h3>`;
         
         if (words.length === 0) {
-            verificationSection.innerHTML += '<p style="color: #999;">Bu unitda hali so\'z yo\'q</p>';
+            verificationSection.innerHTML += '<p style="color: #999;">Bu type\'da hali so\'z yo\'q</p>';
         } else {
             const wordsTable = document.createElement('div');
             wordsTable.style.cssText = `
@@ -829,7 +835,7 @@ async function loadUnitContent(unit, container) {
                 `;
                 editBtn.onmouseover = () => editBtn.style.opacity = '1';
                 editBtn.onmouseout = () => editBtn.style.opacity = '0.6';
-                editBtn.onclick = () => editWord(unit, word);
+                editBtn.onclick = () => editWord(type, word);
                 
                 const deleteBtn = document.createElement('button');
                 deleteBtn.innerHTML = '🗑️';
@@ -844,7 +850,7 @@ async function loadUnitContent(unit, container) {
                 `;
                 deleteBtn.onmouseover = () => deleteBtn.style.opacity = '1';
                 deleteBtn.onmouseout = () => deleteBtn.style.opacity = '0.6';
-                deleteBtn.onclick = () => deleteWord(unit, word._id);
+                deleteBtn.onclick = () => deleteWord(type, word._id);
                 
                 actionsDiv.appendChild(editBtn);
                 actionsDiv.appendChild(deleteBtn);
@@ -883,7 +889,7 @@ async function loadUnitContent(unit, container) {
             font-weight: bold; 
             transition: all 0.3s;
         `;
-        mode1Btn.onclick = () => startGameMode1(unit, words, container);
+        mode1Btn.onclick = () => startGameMode1(type, words, container);
         
         // Game mode 2 button
         const mode2Btn = document.createElement('button');
@@ -900,7 +906,7 @@ async function loadUnitContent(unit, container) {
             font-weight: bold; 
             transition: all 0.3s;
         `;
-        mode2Btn.onclick = () => startGameMode2(unit, words, container);
+        mode2Btn.onclick = () => startGameMode2(type, words, container);
         
         // Game mode 3 button
         const mode3Btn = document.createElement('button');
@@ -917,7 +923,7 @@ async function loadUnitContent(unit, container) {
             font-weight: bold; 
             transition: all 0.3s;
         `;
-        mode3Btn.onclick = () => startGameMode3(unit, words, container);
+        mode3Btn.onclick = () => startGameMode3(type, words, container);
         
         gamesSection.appendChild(mode1Btn);
         gamesSection.appendChild(mode2Btn);
@@ -1145,13 +1151,13 @@ async function showVerification(unit) {
             editBtn.textContent = '✏️';
             editBtn.style.cssText = 'background: transparent; border: none; cursor: pointer; font-size: 0.9em; padding: 2px 4px;';
             editBtn.title = 'Tahrirlash';
-            editBtn.onclick = () => editWord(unit, word);
+            editBtn.onclick = () => editWord(type, word);
             
             const deleteBtn = document.createElement('button');
             deleteBtn.textContent = '🗑️';
             deleteBtn.style.cssText = 'background: transparent; border: none; cursor: pointer; font-size: 0.9em; padding: 2px 4px;';
             deleteBtn.title = 'O\'chirish';
-            deleteBtn.onclick = () => deleteWord(unit, word._id);
+            deleteBtn.onclick = () => deleteWord(type, word._id);
             
             actionButtons.appendChild(editBtn);
             actionButtons.appendChild(deleteBtn);
@@ -1212,11 +1218,11 @@ async function showVerification(unit) {
         document.getElementById('start-game-btn').onclick = () => {
             verificationSection.style.display = 'none';
             if (selectedGameMode === 1) {
-                startGameMode1(unit, words);
+                startGameMode1(type, words);
             } else if (selectedGameMode === 2) {
-                startGameMode2(unit, words);
+                startGameMode2(type, words);
             } else if (selectedGameMode === 3) {
-                startGameMode3(unit, words);
+                startGameMode3(type, words);
             }
         };
 
@@ -1229,33 +1235,19 @@ async function showVerification(unit) {
 // ============================================================
 // GAME MODE 1 - JADVAL CLICK MATCHING
 // ============================================================
-function startGameMode1(unit, words, container) {
-    console.log('🎮 Game Mode 1 (Click Matching) boshlandi - Unit:', unit);
+function startGameMode1(type, words, container) {
+    console.log('🎮 Game Mode 1 (Click Matching) boshlandi - Type:', type);
     
-    // Soʻzlar jadvalini yashirish
-    const verificationSection = container.querySelector('[style*="border-bottom"]');
-    if (verificationSection) {
-        verificationSection.style.display = 'none';
-    }
-    
-    // Game mode tugmalarini yashirish
-    const gamesSection = container.querySelector('div[style*="display: flex"][style*="padding: 20px"]');
-    if (gamesSection) {
-        gamesSection.style.display = 'none';
-    }
+    // Barcha content'ni tozalash va o'yin uchun container tayyorlash
+    container.innerHTML = '';
     
     // O'yin uchun container yaratish
-    let gameContainer = container.querySelector('.game-mode-container');
-    if (!gameContainer) {
-        gameContainer = document.createElement('div');
-        gameContainer.className = 'game-mode-container';
-        gameContainer.style.cssText = `
-            padding: 20px;
-            border-top: 2px solid #f0f0f0;
-        `;
-        container.appendChild(gameContainer);
-    }
-    gameContainer.innerHTML = '';
+    const gameContainer = document.createElement('div');
+    gameContainer.className = 'game-mode-container';
+    gameContainer.style.cssText = `
+        padding: 20px;
+    `;
+    container.appendChild(gameContainer);
     
     // Scroll to game container
     setTimeout(() => {
@@ -1276,9 +1268,8 @@ function startGameMode1(unit, words, container) {
         font-weight: bold;
     `;
     backBtn.onclick = () => {
-        gameContainer.innerHTML = '';
-        if (verificationSection) verificationSection.style.display = 'block';
-        if (gamesSection) gamesSection.style.display = 'flex';
+        // Content ni qayta yuklash
+        loadTypeContent(type, container);
     };
     gameContainer.appendChild(backBtn);
 
@@ -1441,7 +1432,7 @@ function startGameMode1(unit, words, container) {
                     // Agar barcha so'zlarga javob berilgan bo'lsa, o'yinni tugatish
                     if (answeredWords.size === words.length) {
                         setTimeout(() => {
-                            completeUnit(unit, words, container);
+                            completeUnit(type, words, container);
                         }, 500);
                     }
 
@@ -1477,7 +1468,7 @@ function startGameMode1(unit, words, container) {
                         // Agar barcha so'zlarga javob berilgan bo'lsa, o'yinni tugatish
                         if (answeredWords.size === words.length) {
                             setTimeout(() => {
-                                completeUnit(unit, words, container);
+                                completeUnit(type, words, container);
                             }, 500);
                         }
                     }
@@ -1528,33 +1519,19 @@ function startGameMode1(unit, words, container) {
 // ============================================================
 // GAME MODE 2 - O'ZBEKCHA YOZISH (Text Input)
 // ============================================================
-function startGameMode2(unit, words, container) {
-    console.log('🎮 Game Mode 2 (O\'zbekcha Yozish) boshlandi - Unit:', unit);
+function startGameMode2(type, words, container) {
+    console.log('🎮 Game Mode 2 (Manual Translation) boshlandi - Type:', type);
     
-    // Soʻzlar jadvalini yashirish
-    const verificationSection = container.querySelector('[style*="border-bottom"]');
-    if (verificationSection) {
-        verificationSection.style.display = 'none';
-    }
-    
-    // Game mode tugmalarini yashirish
-    const gamesSection = container.querySelector('div[style*="display: flex"][style*="padding: 20px"]');
-    if (gamesSection) {
-        gamesSection.style.display = 'none';
-    }
+    // Barcha content'ni tozalash va o'yin uchun container tayyorlash
+    container.innerHTML = '';
     
     // O'yin uchun container yaratish
-    let gameContainer = container.querySelector('.game-mode-container');
-    if (!gameContainer) {
-        gameContainer = document.createElement('div');
-        gameContainer.className = 'game-mode-container';
-        gameContainer.style.cssText = `
-            padding: 20px;
-            border-top: 2px solid #f0f0f0;
-        `;
-        container.appendChild(gameContainer);
-    }
-    gameContainer.innerHTML = '';
+    const gameContainer = document.createElement('div');
+    gameContainer.className = 'game-mode-container';
+    gameContainer.style.cssText = `
+        padding: 20px;
+    `;
+    container.appendChild(gameContainer);
     
     // Scroll to game container
     setTimeout(() => {
@@ -1575,30 +1552,30 @@ function startGameMode2(unit, words, container) {
         font-weight: bold;
     `;
     backBtn.onclick = () => {
-        gameContainer.innerHTML = '';
-        if (verificationSection) verificationSection.style.display = 'block';
-        if (gamesSection) gamesSection.style.display = 'flex';
+        // Content ni qayta yuklash
+        loadTypeContent(type, container);
     };
     gameContainer.appendChild(backBtn);
 
     let currentIndex = 0;
     let correctCount = 0;
+    let userAnswers = []; // Foydalanuvchi javoblari saqlanadi
     answeredCorrectly = new Set(); // Reset
     selectedGameMode = 2; // Game mode 2 ni set qilish
-
-    const matchMap = new Map();
-    words.forEach(word => {
-        matchMap.set(word.english, word.uzbek);
-    });
+    window.gameMode2Answers = userAnswers; // Global scope'ga saqlash
 
     function showCurrentWord() {
-        const contentDiv = gameContainer.querySelector('.game-content');
-        if (contentDiv) {
-            contentDiv.innerHTML = '';
+        // Barcha oldingi savol va progress elementlarni to'liq o'chirish
+        const oldContents = Array.from(gameContainer.querySelectorAll('.game-content'));
+        oldContents.forEach(el => el.remove());
+        
+        const oldProgress = gameContainer.querySelector('[style*="height: 10px"][style*="border-radius: 5px"]');
+        if (oldProgress) {
+            oldProgress.remove();
         }
 
         if (currentIndex >= words.length) {
-            completeUnit(unit, words, container);
+            showResults(type, words, container, gameContainer);
             return;
         }
 
@@ -1656,12 +1633,12 @@ function startGameMode2(unit, words, container) {
         const buttonsDiv = document.createElement('div');
         buttonsDiv.style.cssText = 'display: flex; gap: 10px; margin-top: 20px;';
 
-        const checkBtn = document.createElement('button');
-        checkBtn.textContent = '✓ Tekshirish';
-        checkBtn.style.cssText = `
+        const nextBtn = document.createElement('button');
+        nextBtn.textContent = '→ Keyingisi';
+        nextBtn.style.cssText = `
             flex: 1;
             padding: 15px;
-            background: #4caf50;
+            background: #2196F3;
             color: white;
             border: none;
             border-radius: 8px;
@@ -1670,49 +1647,31 @@ function startGameMode2(unit, words, container) {
             cursor: pointer;
         `;
 
-        const skipBtn = document.createElement('button');
-        skipBtn.textContent = '⊳ O\'tish';
-        skipBtn.style.cssText = `
-            flex: 1;
-            padding: 15px;
-            background: #FF9800;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-        `;
-
-        checkBtn.onclick = () => {
+        nextBtn.onclick = () => {
             const userAnswer = inputEl.value.trim().toLowerCase();
             const correctAnswer = word.english.toLowerCase();
-
+            
+            // Javobni saqlash (bo'sh javob ham qayd qilinadi)
+            userAnswers.push({
+                word: word,
+                userAnswer: inputEl.value.trim(),
+                isCorrect: userAnswer === correctAnswer
+            });
+            
             if (userAnswer === correctAnswer) {
-                showNotification(`✅ To'g'ri! (${correctCount + 1}/${words.length})`, 'success');
                 answeredCorrectly.add(word._id);
                 correctCount++;
-                currentIndex++;
-                showCurrentWord();
-            } else {
-                showNotification(`❌ Noto'g'ri. To'g'ri javob: ${word.english}`, 'error');
-                currentIndex++;
-                showCurrentWord();
             }
-        };
-
-        skipBtn.onclick = () => {
-            showNotification(`⊳ O'tib yuborildi: ${word.english}`, 'info');
+            
             currentIndex++;
             showCurrentWord();
         };
 
         inputEl.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') checkBtn.click();
+            if (e.key === 'Enter') nextBtn.click();
         });
 
-        buttonsDiv.appendChild(checkBtn);
-        buttonsDiv.appendChild(skipBtn);
+        buttonsDiv.appendChild(nextBtn);
         containerDiv.appendChild(buttonsDiv);
 
         gameContainer.appendChild(containerDiv);
@@ -1751,33 +1710,19 @@ function startGameMode2(unit, words, container) {
 // ============================================================
 // GAME MODE 3 - TEZKOR TANLOV (Multiple Choice, 5-sec Timer)
 // ============================================================
-function startGameMode3(unit, words, container) {
-    console.log('🎮 Game Mode 3 (Tezkor Tanlov) boshlandi - Unit:', unit);
+function startGameMode3(type, words, container) {
+    console.log('🎮 Game Mode 3 (Tezkor Tanlov) boshlandi - Type:', type);
     
-    // Soʻzlar jadvalini yashirish
-    const verificationSection = container.querySelector('[style*="border-bottom"]');
-    if (verificationSection) {
-        verificationSection.style.display = 'none';
-    }
-    
-    // Game mode tugmalarini yashirish
-    const gamesSection = container.querySelector('div[style*="display: flex"][style*="padding: 20px"]');
-    if (gamesSection) {
-        gamesSection.style.display = 'none';
-    }
+    // Barcha content'ni tozalash va o'yin uchun container tayyorlash
+    container.innerHTML = '';
     
     // O'yin uchun container yaratish
-    let gameContainer = container.querySelector('.game-mode-container');
-    if (!gameContainer) {
-        gameContainer = document.createElement('div');
-        gameContainer.className = 'game-mode-container';
-        gameContainer.style.cssText = `
-            padding: 20px;
-            border-top: 2px solid #f0f0f0;
-        `;
-        container.appendChild(gameContainer);
-    }
-    gameContainer.innerHTML = '';
+    const gameContainer = document.createElement('div');
+    gameContainer.className = 'game-mode-container';
+    gameContainer.style.cssText = `
+        padding: 20px;
+    `;
+    container.appendChild(gameContainer);
     
     // Scroll to game container
     setTimeout(() => {
@@ -1798,9 +1743,8 @@ function startGameMode3(unit, words, container) {
         font-weight: bold;
     `;
     backBtn.onclick = () => {
-        gameContainer.innerHTML = '';
-        if (verificationSection) verificationSection.style.display = 'block';
-        if (gamesSection) gamesSection.style.display = 'flex';
+        // Content ni qayta yuklash
+        loadTypeContent(type, container);
     };
     gameContainer.appendChild(backBtn);
 
@@ -1841,7 +1785,7 @@ function startGameMode3(unit, words, container) {
         canAnswer = true;
 
         if (currentIndex >= shuffledWords.length) {
-            completeUnit(unit, words, container);
+            completeUnit(type, words, container);
             return;
         }
 
@@ -2004,10 +1948,10 @@ function startGameMode3(unit, words, container) {
 let answeredCorrectly = new Set(); // To'g'ri javob berilgan so'zlarning ID lari
 
 // Unit tugallanganda - statusni update qilish (har bir game mode uchun foyiz saqlaymuz)
-async function completeUnit(unit, words, container) {
+async function completeUnit(type, words, container) {
     try {
         const correctPercentage = Math.round((answeredCorrectly.size / words.length) * 100);
-        console.log(`🎯 Complete Unit ${unit}: ${answeredCorrectly.size}/${words.length} = ${correctPercentage}%`); // Debug
+        console.log(`🎯 Complete Unit ${type}: ${answeredCorrectly.size}/${words.length} = ${correctPercentage}%`); // Debug
         
         if (answeredCorrectly.size === words.length) {
             showNotification('🎉 Barcha so\'zlar 100% to\'g\'ri! Yodlash tugallandi!', 'success');
@@ -2040,12 +1984,12 @@ async function completeUnit(unit, words, container) {
                 updates.push(updateData);
             }
             
-            console.log(`📦 Batch update yuborilmoqda: Unit ${unit}, ${updates.length} ta so'z`); // Debug
+            console.log(`📦 Batch update yuborilmoqda: Type ${type}, ${updates.length} ta so'z`); // Debug
             
             const result = await fetch(`${window.API_BASE_URL}/batch-update`, { 
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ updates, unit })
+                body: JSON.stringify({ updates, type })
             });
             
             if (result.ok) {
@@ -2083,7 +2027,7 @@ async function completeUnit(unit, words, container) {
                     // Eski usuli - practice section bo'lsa
                     document.getElementById('practice-section').style.display = 'none';
                     answeredCorrectly = new Set(); // Reset qilish
-                    loadUnits();
+                    loadTypes();
                 }
             } else {
                 console.error(`❌ Batch update failed:`, result.status);
@@ -2099,7 +2043,45 @@ async function completeUnit(unit, words, container) {
 }
 
 // Sahifa yuklanganda unitlarni ko'rsatish
-window.addEventListener('load', loadUnits);
+window.addEventListener('load', () => {
+    loadVocabularyTypes();
+    loadTypes();
+    
+    // Vocabulary button event listener
+    const vocabularyBtn = document.getElementById('vocabulary-btn');
+    if (vocabularyBtn) {
+        vocabularyBtn.addEventListener('click', () => {
+            // Types section'ni ko'rsatish
+            document.getElementById('units-section').style.display = 'block';
+            const ieltsSection = document.getElementById('ielts-section');
+            if (ieltsSection) ieltsSection.style.display = 'none';
+            
+            // Scroll to types
+            document.getElementById('units-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            
+            // Active state
+            vocabularyBtn.style.opacity = '1';
+            document.getElementById('ielts-training-btn').style.opacity = '0.7';
+        });
+    }
+    
+    // IELTS Training button event listener
+    const ieltsBtn = document.getElementById('ielts-training-btn');
+    if (ieltsBtn) {
+        ieltsBtn.addEventListener('click', () => {
+            // IELTS section'ni ko'rsatish (keyinroq implement qilinadi)
+            showNotification('🎯 IELTS Training tez orada...', 'info');
+            
+            // Active state
+            ieltsBtn.style.opacity = '1';
+            vocabularyBtn.style.opacity = '0.7';
+        });
+    }
+    
+    // Default - Vocabulary active
+    if (vocabularyBtn) vocabularyBtn.style.opacity = '1';
+    if (ieltsBtn) ieltsBtn.style.opacity = '0.7';
+});
 
 // ============================================================
 // SERVICE WORKER REGISTRATION & PWA SETUP
@@ -2243,7 +2225,7 @@ window.addEventListener('appinstalled', () => {
 window.addEventListener('online', () => {
   console.log('🌐 Back online');
   showNotification('🌐 Internet ulandi!', 'success');
-  loadUnits(); // Refresh data
+  loadTypes(); // Refresh data
 });
 
 // ========== DESCRIPTION TOOLTIP FUNCTIONS ==========
@@ -2396,13 +2378,13 @@ function showModal(message, type = 'confirm') {
     });
 }
 
-// ========== UNIT VA SO'Z O'CHIRISH / TAHRIRLASH ==========
-async function deleteWord(unit, wordId) {
+// ========== TYPE VA SO'Z O'CHIRISH / TAHRIRLASH ==========
+async function deleteWord(type, wordId) {
     const confirmed = await showModal("Bu so'zni o'chirmoqchimisiz?", 'confirm');
     if (!confirmed) return;
     
     try {
-        const response = await fetch(`${window.API_BASE_URL}/word-action?unit=${unit}&wordId=${wordId}`, {
+        const response = await fetch(`${window.API_BASE_URL}/word-action?type=${type}&wordId=${wordId}`, {
             method: 'DELETE'
         });
         
@@ -2410,27 +2392,40 @@ async function deleteWord(unit, wordId) {
             throw new Error('So\'zni o\'chirishda xatolik');
         }
         
-        await showModal("So'z muvaffaqiyatli o'chirildi!", 'alert');
+        showNotification("✅ So'z muvaffaqiyatli o'chirildi!", 'success');
         
-        // Accordion content'ni qayta yuklash
-        const accordions = document.querySelectorAll('.unit-accordion');
-        accordions.forEach(acc => {
-            const header = acc.querySelector('button');
-            if (header.textContent.includes(`Unit ${unit}`)) {
-                const content = acc.querySelector('.unit-content');
-                loadUnitContent(unit, content);
+        // Ochiq type ni eslab qolish
+        const currentOpenType = type;
+        
+        // Barcha datani yangilash
+        await loadTypes();
+        
+        // Ochiq bo'lgan type ni qayta ochish
+        setTimeout(() => {
+            const accordions = document.querySelectorAll('.type-accordion');
+            for (const accordion of accordions) {
+                const header = accordion.querySelector('.type-header');
+                if (header) {
+                    const headerText = header.textContent;
+                    const accordionType = vocabularyTypes.find(t => headerText.includes(t.displayName))?.type;
+                    if (accordionType === currentOpenType) {
+                        // Accordion ni ochish
+                        header.click();
+                        break;
+                    }
+                }
             }
-        });
+        }, 100);
     } catch (error) {
         console.error('❌ Delete word error:', error);
-        await showModal('Xatolik yuz berdi!', 'alert');
+        showNotification('❌ Xatolik yuz berdi!', 'error');
     }
 }
 
-async function editWord(unit, word) {
-    // Unit ma'lumotlarini olish
-    const unitData = allUnitsData.find(u => u.unit === unit);
-    const currentUnitName = unitData?.unitName || '';
+async function editWord(type, word) {
+    // Type ma'lumotlarini olish
+    const typeData = allTypesData.find(t => t.type === type);
+    const currentDisplayName = typeData?.displayName || type;
     
     // Modal yaratish
     const modal = document.createElement('div');
@@ -2459,11 +2454,10 @@ async function editWord(unit, word) {
     
     form.innerHTML = `
         <h3 style="margin: 0 0 15px 0;">So'zni tahrirlash</h3>
-        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Unit raqami:</label>
-        <input type="number" step="0.1" id="edit-unit" value="${unit}" style="width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px;">
-        
-        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Unit nomi (Mavzu):</label>
-        <input type="text" id="edit-unit-name" value="${currentUnitName}" placeholder="Masalan: Mevalar" style="width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px;">
+        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Type:</label>
+        <select id="edit-type" style="width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px;">
+            ${vocabularyTypes.map(t => `<option value="${t.type}" ${t.type === type ? 'selected' : ''}>${t.displayName}</option>`).join('')}
+        </select>
         
         <label style="display: block; margin-bottom: 5px; font-weight: bold;">English:</label>
         <input type="text" id="edit-english" value="${word.english}" style="width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px;">
@@ -2490,30 +2484,30 @@ async function editWord(unit, word) {
     
     // Saqlash
     document.getElementById('save-edit').onclick = async () => {
-        const newUnit = parseFloat(document.getElementById('edit-unit').value);
-        const unitName = document.getElementById('edit-unit-name').value.trim();
+        const newType = document.getElementById('edit-type').value.trim();
         const english = document.getElementById('edit-english').value.trim();
         const uzbek = document.getElementById('edit-uzbek').value.trim();
         const description = document.getElementById('edit-description').value.trim();
+        const displayName = vocabularyTypes.find(t => t.type === newType)?.displayName || '';
         
         console.log('📝 Edit qilinmoqda:', { 
-            oldUnit: unit, 
-            newUnit, 
-            unitName, 
+            oldType: type, 
+            newType, 
+            displayName, 
             english, 
             uzbek, 
             description,
             wordId: word._id 
         });
         
-        if (!english || !uzbek || isNaN(newUnit)) {
-            await showModal('English, O\'zbekcha va Unit raqami majburiy!', 'alert');
+        if (!english || !uzbek || !newType) {
+            await showModal('English, O\'zbekcha va Type majburiy!', 'alert');
             return;
         }
         
         try {
-            const apiUrl = `${window.API_BASE_URL}/word-action?oldUnit=${unit}&wordId=${word._id}`;
-            const requestBody = { english, uzbek, description, newUnit, unitName };
+            const apiUrl = `${window.API_BASE_URL}/word-action?oldType=${type}&wordId=${word._id}`;
+            const requestBody = { english, uzbek, description, newType, displayName };
             
             console.log('🌐 API URL:', apiUrl);
             console.log('📦 Request body:', requestBody);
@@ -2538,13 +2532,33 @@ async function editWord(unit, word) {
             console.log('✅ Server javobi:', result);
             
             document.body.removeChild(modal);
-            await showModal('So\'z muvaffaqiyatli yangilandi!', 'alert');
+            showNotification('✅ So\'z muvaffaqiyatli yangilandi!', 'success');
             
-            // Har doim loadUnits() chaqirish (unit nomi o'zgarganda ham yangilanadi)
-            loadUnits();
+            // Ochiq type ni eslab qolish (newType bo'lishi mumkin chunki type o'zgarishi mumkin)
+            const currentOpenType = newType;
+            
+            // Barcha datani yangilash
+            await loadTypes();
+            
+            // Ochiq bo'lgan type ni qayta ochish
+            setTimeout(() => {
+                const accordions = document.querySelectorAll('.type-accordion');
+                for (const accordion of accordions) {
+                    const header = accordion.querySelector('.type-header');
+                    if (header) {
+                        const headerText = header.textContent;
+                        const accordionType = vocabularyTypes.find(t => headerText.includes(t.displayName))?.type;
+                        if (accordionType === currentOpenType) {
+                            // Accordion ni ochish
+                            header.click();
+                            break;
+                        }
+                    }
+                }
+            }, 100);
         } catch (error) {
             console.error('❌ Edit word error:', error);
-            await showModal('Xatolik yuz berdi!', 'alert');
+            showNotification('❌ Xatolik yuz berdi!', 'error');
         }
     };
 }
@@ -2573,4 +2587,122 @@ window.addEventListener('offline', () => {
   console.log('📴 Offline');
   showNotification('📴 Internet uzildi - Offline mode', 'info');
 });
+
+// Game Mode 2 uchun natija ko'rsatish
+async function showResults(type, words, container, gameContainer) {
+    const correctPercentage = Math.round((answeredCorrectly.size / words.length) * 100);
+    console.log(`🎯 Game Mode 2 Natija: ${answeredCorrectly.size}/${words.length} = ${correctPercentage}%`);
+    
+    // Batch update
+    try {
+        const updates = [];
+        
+        for (let word of words) {
+            const wordCorrect = answeredCorrectly.has(word._id);
+            const wordPercentage = wordCorrect ? 100 : 0;
+            
+            const updateData = { id: word._id, gameMode2: wordPercentage };
+            updates.push(updateData);
+        }
+        
+        const result = await fetch(`${window.API_BASE_URL}/batch-update`, { 
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ updates, type })
+        });
+        
+        if (result.ok) {
+            const batchResult = await result.json();
+            console.log(`✅ Game Mode 2 natija saved: ${correctPercentage}%`, batchResult);
+        }
+    } catch (err) {
+        console.error('Batch update xatosi:', err);
+    }
+    
+    // Natija HTML'ni yaratish
+    let resultHTML = `
+        <div style="padding: 30px 20px; text-align: center; background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%); border-radius: 12px;">
+            <h2 style="color: #667eea; margin: 20px 0; font-size: 28px;">🎉 O'yin Tugallandi!</h2>
+            
+            <div style="background: white; border-radius: 10px; padding: 30px; margin: 20px 0; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);">
+                <div style="font-size: 48px; color: #2196F3; font-weight: bold; margin: 20px 0;">${correctPercentage}%</div>
+                <div style="font-size: 18px; color: #666; margin-bottom: 10px;">
+                    <span style="color: #4caf50; font-weight: bold;">${answeredCorrectly.size}</span> / 
+                    <span>${words.length}</span> to'g'ri
+                </div>
+            </div>
+            
+            <div style="background: white; border-radius: 10px; padding: 20px; margin: 20px 0; text-align: left; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); max-height: 400px; overflow-y: auto;">
+                <h3 style="color: #667eea; margin-bottom: 15px; font-size: 18px;">📝 Natijalar:</h3>
+    `;
+    
+    // Barcha javoblarni ko'rsatish - window.gameMode2Answers'dan
+    if (window.gameMode2Answers && window.gameMode2Answers.length > 0) {
+        window.gameMode2Answers.forEach(answer => {
+            const statusIcon = answer.isCorrect ? '✅' : '❌';
+            const statusColor = answer.isCorrect ? '#4caf50' : '#f44336';
+            const statusText = answer.isCorrect ? 'To\'g\'ri' : 'Noto\'g\'ri';
+            
+            resultHTML += `
+                <div style="padding: 12px; margin: 10px 0; border-left: 4px solid ${statusColor}; background: #f9f9f9; border-radius: 6px;">
+                    <div style="font-weight: bold; color: #333; margin-bottom: 5px;">
+                        <span style="color: ${statusColor};">${statusIcon}</span> ${answer.word.uzbek}
+                    </div>
+                    <div style="font-size: 14px; color: #666;">
+                        <strong>To'g'ri:</strong> ${answer.word.english}
+                    </div>
+                    <div style="font-size: 14px; color: ${statusColor}; margin-top: 5px;">
+                        <strong>Siz yozdingiz:</strong> ${answer.userAnswer || '(bo\'sh)'}
+                    </div>
+                </div>
+            `;
+        });
+    }
+    
+    resultHTML += `
+            </div>
+            
+            <button onclick="location.reload()" style="
+                padding: 15px 40px;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                border: none;
+                border-radius: 8px;
+                cursor: pointer;
+                font-weight: bold;
+                font-size: 16px;
+                margin-top: 10px;
+            ">
+                ✓ Davom Etish
+            </button>
+            <button onclick="restartGameMode2(event)" style="
+                padding: 15px 40px;
+                background: #2196F3;
+                color: white;
+                border: none;
+                border-radius: 8px;
+                cursor: pointer;
+                font-weight: bold;
+                font-size: 16px;
+                margin-top: 10px;
+                margin-left: 10px;
+            ">
+                🔄 Qayta Boshlash
+            </button>
+        </div>
+    `;
+    
+    gameContainer.innerHTML = resultHTML;
+    
+    // Scroll to results
+    setTimeout(() => {
+        gameContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        container.style.maxHeight = container.scrollHeight + 'px';
+    }, 100);
+}
+
+function restartGameMode2(event) {
+    event.preventDefault();
+    location.reload();
+}
 

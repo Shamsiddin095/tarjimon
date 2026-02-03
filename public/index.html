@@ -32,32 +32,11 @@
         z-index: 1000;
         box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
         display: flex;
-        justify-content: space-between;
+        justify-content: flex-end;
         align-items: center;
         gap: 8px;
     ">
-        <!-- LEFT SIDE - ADD WORDS BUTTON -->
-        <button id="toggle-add-words-btn" style="
-            padding: 8px 12px;
-            background: rgba(255, 255, 255, 0.25);
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-            font-size: 1em;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s;
-            z-index: 101;
-            white-space: nowrap;
-            min-width: 36px;
-            text-align: center;
-        " onmouseover="this.style.background='rgba(255, 255, 255, 0.35)'; this.style.transform='translateY(-2px)'" onmouseout="this.style.background='rgba(255, 255, 255, 0.25)'; this.style.transform='translateY(0)'">
-            ➕
-        </button>
-
-        <!-- RIGHT SIDE - SEARCH BAR -->
-        <div id="search-controls" style="display: flex; align-items: center; gap: 6px; flex: 1; max-width: 250px; overflow: hidden;">
+        <!-- SEARCH BAR -->
             <input 
                 type="text" 
                 id="global-search-input" 
@@ -209,53 +188,18 @@
     <div id="app" style="margin-top: 65px;">
         <h1>📚 Vocabulary Learning App</h1>
         
-        <div id="add-words-section" style="border: 1px solid #ccc; padding: 20px; margin: 20px 0; display: none; background: #f9f9f9; border-radius: 10px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h2 style="margin: 0;">✏️ So'zlarni Qo'shish</h2>
-                <button id="close-add-words-btn" style="
-                    background: transparent;
-                    color: #333;
-                    border: none;
-                    width: 32px;
-                    height: 32px;
-                    border-radius: 50%;
-                    cursor: pointer;
-                    font-size: 24px;
-                    font-weight: 900;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    transition: all 0.3s ease;
-                    padding: 0;
-                " onmouseover="this.style.transform='scale(1.2)'; this.style.color='#f5576c';" onmouseout="this.style.transform='scale(1)'; this.style.color='#333';">✕</button>
-            </div>
-            <div id="word-inputs-container">
-                <div class="word-input-row" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; padding: 10px; background: #f9f9f9; border-radius: 6px; border-left: 3px solid #667eea;">
-                    <div style="display: flex; gap: 10px;">
-                        <input type="text" class="english-input" placeholder="Inglizcha" style="flex: 1;">
-                        <input type="text" class="uzbek-input" placeholder="O'zbekcha" style="flex: 1;">
-                    </div>
-                    <input type="text" class="word-description-input" placeholder="Tavsif (ixtiyoriy)" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                </div>
-            </div>
-            
-
-            <button id="add-more-words">+ Yangi qo'shish</button>
-            
-            <div style="margin-top: 20px;">
-                <label>Unit Raqami:</label>
-                <input type="number" step="0.1" id="unit-number" placeholder="1, 1.1, 2..." min="0.1">
-                
-                <label style="margin-left: 15px;">Unit Nomi (Mavzu):</label>
-                <input type="text" id="unit-name-input" placeholder="Masalan: Mevalar, Hayvonlar...">
-                
-                <button id="save-words">💾 Saqlash</button>
-            </div>
-            <div id="save-message"></div>
+        <!-- Navigation Buttons -->
+        <div style="display: flex; gap: 10px; justify-content: center; margin: 20px 0;">
+            <button id="vocabulary-btn" class="nav-btn vocab-btn">
+                📚 Vocabulary
+            </button>
+            <button id="ielts-training-btn" class="nav-btn ielts-btn">
+                🎯 IELTS Training
+            </button>
         </div>
-
+        
         <div id="units-section" style="border: 1px solid #ccc; padding: 20px; margin: 20px 0;">
-            <h2>🎯 Yodlash Unitlari</h2>
+            <h2>🎯 Yodlash Turlari</h2>
             <div id="units-list"></div>
         </div>
 
@@ -292,8 +236,40 @@
             <h2>🎮 O'yin - So'zlarni Moslashtir</h2>
             <div id="practice-container"></div>
         </div>
+        
+        <!-- IELTS TRAINING SECTION -->
+        <div id="ielts-section" style="display: none; padding: 20px; margin: 20px 0;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="margin: 0;">🎯 IELTS Training</h2>
+                <button id="ielts-admin-btn" style="padding: 10px 20px; background: #764ba2; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">
+                    ⚙️ Admin Panel
+                </button>
+            </div>
+            
+            <!-- 4 BOSQICH -->
+            <div id="ielts-stages-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;"></div>
+        </div>
+        
+        <!-- IELTS ADMIN PANEL -->
+        <div id="ielts-admin-panel" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 10000; overflow-y: auto;">
+            <div style="max-width: 900px; margin: 50px auto; background: white; border-radius: 12px; padding: 30px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 style="margin: 0;">⚙️ IELTS Admin Panel</h2>
+                    <button id="close-admin-btn" style="padding: 8px 15px; background: #f44336; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
+                        ✕ Yopish
+                    </button>
+                </div>
+                <div id="admin-content"></div>
+            </div>
+        </div>
+        
+        <!-- IELTS TRAINING PLAYER -->
+        <div id="ielts-player" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: white; z-index: 9999; overflow-y: auto;">
+            <div id="ielts-player-content"></div>
+        </div>
     </div>
 
     <script src="script.js?v=3.0"></script>
+    <script src="ielts.js?v=1.0"></script>
 </body>
 </html>

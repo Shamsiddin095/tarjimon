@@ -17,17 +17,17 @@ export default async function handler(req, res) {
 
   try {
     await connectToDatabase();
-    const { Unit } = getModels();
+    const { Type } = getModels();
 
-    const units = await Unit.find().select('unit unitName words');
+    const types = await Type.find().select('type displayName words');
     
-    const unitsData = units.map(u => ({
-      unit: u.unit,
-      unitName: u.unitName || '',
-      wordCount: u.words.length
+    const typesData = types.map(t => ({
+      type: t.type,
+      displayName: t.displayName || '',
+      wordCount: t.words.length
     }));
     
-    res.status(200).json(unitsData);
+    res.status(200).json(typesData);
   } catch (error) {
     console.error('API error:', error);
     res.status(500).json({ error: error.message });

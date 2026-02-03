@@ -17,17 +17,18 @@ export default async function handler(req, res) {
 
   try {
     await connectToDatabase();
-    const { Unit } = getModels();
+    const { Type } = getModels();
 
     // Barcha so'zlarni olish
-    const units = await Unit.find();
+    const types = await Type.find();
     
     const allWords = [];
-    units.forEach(unitDoc => {
-      unitDoc.words.forEach(word => {
+    types.forEach(typeDoc => {
+      typeDoc.words.forEach(word => {
         allWords.push({
           ...word.toObject(),
-          unit: unitDoc.unit
+          type: typeDoc.type,
+          displayName: typeDoc.displayName
         });
       });
     });

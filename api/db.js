@@ -56,16 +56,16 @@ const wordSubSchema = new mongoose.Schema({
   date: { type: Date, default: Date.now }
 }, { _id: true });
 
-const unitSchema = new mongoose.Schema({
-  unit: { type: Number, required: true, unique: true },
-  unitName: { type: String, default: '' },
+const typeSchema = new mongoose.Schema({
+  type: { type: String, required: true, unique: true }, // 'mevalar', 'jihozlar', 'kasblar'
+  displayName: { type: String, default: '' }, // Ko'rsatish uchun nom
   words: [wordSubSchema],
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });
 
-const unitStatsSchema = new mongoose.Schema({
-  unit: { type: Number, required: true, unique: true },
+const typeStatsSchema = new mongoose.Schema({
+  type: { type: String, required: true, unique: true },
   totalWords: { type: Number, default: 0 },
   gameMode1Avg: { type: Number, default: 0 },
   gameMode2Avg: { type: Number, default: 0 },
@@ -73,10 +73,29 @@ const unitStatsSchema = new mongoose.Schema({
   lastUpdated: { type: Date, default: Date.now }
 });
 
+// Predefined types
+const VOCABULARY_TYPES = [
+  { type: 'mevalar', displayName: '🍎 Mevalar' },
+  { type: 'jihozlar', displayName: '🔧 Jihozlar' },
+  { type: 'kasblar', displayName: '👨‍💼 Kasblar' },
+  { type: 'hayvonlar', displayName: '🐾 Hayvonlar' },
+  { type: 'raqamlar', displayName: '🔢 Raqamlar' },
+  { type: 'rangli', displayName: '🌈 Ranglar' },
+  { type: 'oilam', displayName: '👨‍👩‍👧‍👦 Oila' },
+  { type: 'jismiy', displayName: '🏃 Jismiy Mashqlar' },
+  { type: 'taom', displayName: '🍽️ Taomlar' },
+  { type: 'uy', displayName: '🏠 Uy Narsalari' }
+];
+
 // Get or create models
 export function getModels() {
-  const Unit = mongoose.models.Unit || mongoose.model('Unit', unitSchema);
-  const UnitStats = mongoose.models.UnitStats || mongoose.model('UnitStats', unitStatsSchema);
+  const Type = mongoose.models.Type || mongoose.model('Type', typeSchema);
+  const TypeStats = mongoose.models.TypeStats || mongoose.model('TypeStats', typeStatsSchema);
   
-  return { Unit, UnitStats };
+  return { Type, TypeStats };
+}
+
+// Get predefined vocabulary types
+export function getVocabularyTypes() {
+  return VOCABULARY_TYPES;
 }

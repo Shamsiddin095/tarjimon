@@ -18,20 +18,20 @@ export default async function handler(req, res) {
 
   try {
     await connectToDatabase();
-    const { Unit, UnitStats } = getModels();
+    const { Type, TypeStats } = getModels();
 
-    const { updates, unit } = req.body;
+    const { updates, type } = req.body;
     
     if (!Array.isArray(updates)) {
       return res.status(400).json({ error: 'Updates array bo\'lishi kerak' });
     }
 
-    console.log(`📦 Batch update boshlandi: Unit ${unit}, ${updates.length} ta so'z`);
+    console.log(`📦 Batch update boshlandi: Type ${type}, ${updates.length} ta so'z`);
 
-    // Unit document'ni topish
-    const unitDoc = await Unit.findOne({ unit });
-    if (!unitDoc) {
-      return res.status(404).json({ error: 'Unit topilmadi' });
+    // Type document'ni topish
+    const typeDoc = await Type.findOne({ type });
+    if (!typeDoc) {
+      return res.status(404).json({ error: 'Type topilmadi' });
     }
 
     // Har bir update uchun so'zni topib o'zgartirivish
@@ -39,33 +39,33 @@ export default async function handler(req, res) {
     updates.forEach(update => {
       const { id, ...updateData } = update;
       
-      const wordIndex = unitDoc.words.findIndex(w => w._id.toString() === id);
+      const wordIndex = typeDoc.words.findIndex(w => w._id.toString() === id);
       if (wordIndex !== -1) {
-        Object.assign(unitDoc.words[wordIndex], updateData);
+        Object.assign(typeDoc.words[wordIndex], updateData);
         updatedCount++;
       }
     });
 
-    unitDoc.updatedAt = new Date();
-    const savedDoc = await unitDoc.save();
+    typeDoc.updatedAt = new Date();
+    const savedDoc = await typeDoc.save();
 
-    // Unit stats'ni calculate qilish (0'dan katta bo'lganlari uchun)
-    const gameMode1Avg = unitDoc.words.length > 0 
-      ? Math.round(unitDoc.words.reduce((sum, w) => sum + (w.gameMode1 || 0), 0) / unitDoc.words.length) 
+    // Type stats'ni calculate qilish (0'dan katta bo'lganlari uchun)
+    const gameMode1Avg = typeDoc.words.length > 0 
+      ? Math.round(typeDoc.words.reduce((sum, w) => sum + (w.gameMode1 || 0), 0) / typeDoc.words.length) 
       : 0;
-    const gameMode2Avg = unitDoc.words.length > 0 
-      ? Math.round(unitDoc.words.reduce((sum, w) => sum + (w.gameMode2 || 0), 0) / unitDoc.words.length) 
+    const gameMode2Avg = typeDoc.words.length > 0 
+      ? Math.round(typeDoc.words.reduce((sum, w) => sum + (w.gameMode2 || 0), 0) / typeDoc.words.length) 
       : 0;
-    const gameMode3Avg = unitDoc.words.length > 0 
-      ? Math.round(unitDoc.words.reduce((sum, w) => sum + (w.gameMode3 || 0), 0) / unitDoc.words.length) 
+    const gameMode3Avg = typeDoc.words.length > 0 
+      ? Math.round(typeDoc.words.reduce((sum, w) => sum + (w.gameMode3 || 0), 0) / typeDoc.words.length) 
       : 0;
 
-    // Unit stats document'ni update qilish
-    await UnitStats.findOneAndUpdate(
-      { unit },
+    // Type stats document'ni update qilish
+    await TypeStats.findOneAndUpdate(
+      { type },
       {
-        unit,
-        totalWords: unitDoc.words.length,
+        type,
+        totalWords: typeDoc.words.length,
         gameMode1Avg,
         gameMode2Avg,
         gameMode3Avg,

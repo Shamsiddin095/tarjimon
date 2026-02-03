@@ -14,20 +14,20 @@ export default async function handler(req, res) {
 
   try {
     await connectToDatabase();
-    const { Unit, UnitStats } = getModels();
+    const { Type, TypeStats } = getModels();
 
     if (req.method === 'POST') {
       // Yangi so'z qo'shish
-      const { english, uzbek, unit, description } = req.body;
+      const { english, uzbek, type, description } = req.body;
       
-      if (!english || !uzbek || !unit) {
+      if (!english || !uzbek || !type) {
         return res.status(400).json({ error: 'Barcha maydonlar to\'ldirilishi kerak' });
       }
 
-      let unitDoc = await Unit.findOne({ unit });
+      let typeDoc = await Type.findOne({ type });
       
-      if (!unitDoc) {
-        unitDoc = new Unit({ unit, words: [] });
+      if (!typeDoc) {
+        typeDoc = new Type({ type, words: [] });
       }
       
       const newWord = {
@@ -40,41 +40,42 @@ export default async function handler(req, res) {
         gameMode3: 0
       };
       
-      unitDoc.words.push(newWord);
-      unitDoc.updatedAt = new Date();
-      const saved = await unitDoc.save();
+      typeDoc.words.push(newWord);
+      typeDoc.updatedAt = new Date();
+      const saved = await typeDoc.save();
       
       // Stats'ni o'chirib tashlash (yangi so'z qo'shilganda stats 0 bo'lishi kerak)
-      await UnitStats.deleteOne({ unit });
+      await TypeStats.deleteOne({ type });
       
       res.status(201).json(saved);
     } 
     else if (req.method === 'GET') {
-      // Unit bo'yicha so'zlarni olish
-      // URL dan: /api/words/1 yoki query dan: /api/words?unit=1
-      let unit = req.query.unit;
+      // Type bo'yicha so'zlarni olish
+      // URL dan: /api/words/mevalar yoki query dan: /api/words?type=mevalar
+      let type = req.query.type;
       
       // Agar URL path'dan kelsa
-      if (!unit && req.url.includes('/api/words/')) {
-        const match = req.url.match(/\/api\/words\/(\d+)/);
+      if (!type && req.url.includes('/api/words/')) {
+        const match = req.url.match(/\/api\/words\/([a-zA-Z0-9_-]+)/);
         if (match) {
-          unit = match[1];
+          type = match[1];
         }
       }
       
-      if (unit) {
-        const unitDoc = await Unit.findOne({ unit: parseInt(unit) });
-        if (!unitDoc) {
+      if (type) {
+        const typeDoc = await Type.findOne({ type });
+        if (!typeDoc) {
           return res.json([]);
         }
         
-        const wordsWithUnit = unitDoc.words.map(word => ({
+        const wordsWithType = typeDoc.words.map(word => ({
           ...word.toObject(),
-          unit: unitDoc.unit
+          type: typeDoc.type,
+          displayName: typeDoc.displayName
         }));
-        res.json(wordsWithUnit);
+        res.json(wordsWithType);
       } else {
-        res.status(400).json({ error: 'unit parameter kerak' });
+        res.status(400).json({ error: 'type parameter kerak' });
       }
     } 
     else {
