@@ -491,15 +491,8 @@ app.put('/api/word-action', async (req, res) => {
 });
 
 // ==========================================
-// IELTS TRAINING ROUTES
+// STATIC FILES
 // ==========================================
-
-// IELTS Schemas
-// IELTS Schemas - /api/ielts.js'da birlashtirilgan
-// Serverless functions soni kengaytirish uchun lokal schemaları o'chirildi
-
-// IELTS routelar - /api/ielts.js da birlashtirilgan
-// Serverless functions soni kengaytirish uchun lokal routelar o'chirildi
 
 // Static fayllar
 app.use(express.static(path.join(__dirname, 'public')));

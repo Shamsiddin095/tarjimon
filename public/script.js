@@ -2061,26 +2061,11 @@ window.addEventListener('load', () => {
             
             // Active state
             vocabularyBtn.style.opacity = '1';
-            document.getElementById('ielts-training-btn').style.opacity = '0.7';
-        });
-    }
-    
-    // IELTS Training button event listener
-    const ieltsBtn = document.getElementById('ielts-training-btn');
-    if (ieltsBtn) {
-        ieltsBtn.addEventListener('click', () => {
-            // IELTS section'ni ko'rsatish (keyinroq implement qilinadi)
-            showNotification('🎯 IELTS Training tez orada...', 'info');
-            
-            // Active state
-            ieltsBtn.style.opacity = '1';
-            vocabularyBtn.style.opacity = '0.7';
         });
     }
     
     // Default - Vocabulary active
     if (vocabularyBtn) vocabularyBtn.style.opacity = '1';
-    if (ieltsBtn) ieltsBtn.style.opacity = '0.7';
 });
 
 // ============================================================
