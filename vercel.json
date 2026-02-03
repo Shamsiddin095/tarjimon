@@ -12,6 +12,7 @@
     { "src": "/api/units", "dest": "/api/units.js" },
     { "src": "/api/unit-stats", "dest": "/api/unit-stats.js" },
     { "src": "/api/word-action", "dest": "/api/word-action.js" },
+    { "src": "/api/ielts.*", "dest": "/api/ielts.js" },
     { "src": "/api/words/(?<unit>[0-9]+)", "dest": "/api/words.js" },
     { "src": "/api/words/(?<id>[a-zA-Z0-9]+)", "dest": "/api/words/[id].js" },
     { "src": "/api/words", "dest": "/api/words.js" },

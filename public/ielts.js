@@ -61,12 +61,12 @@ async function loadAllIELTSData() {
     try {
         for (const stage of IELTS_STATE.stages) {
             // Load trainings
-            const trainingsResponse = await fetch(`${window.API_BASE_URL}/ielts-trainings?stage=${stage}`);
+            const trainingsResponse = await fetch(`${window.API_BASE_URL}/api/ielts?type=training&stage=${stage}`);
             const trainings = await trainingsResponse.json();
             IELTS_STATE.trainings[stage] = trainings || [];
             
             // Load audio tracks
-            const tracksResponse = await fetch(`${window.API_BASE_URL}/ielts-audio?stage=${stage}`);
+            const tracksResponse = await fetch(`${window.API_BASE_URL}/api/ielts?type=audio&stage=${stage}`);
             const tracks = await tracksResponse.json();
             IELTS_STATE.audioTracks[stage] = tracks || [];
         }
@@ -264,7 +264,7 @@ async function uploadAudioForTraining(stage) {
     formData.append('duration', 0);
     
     try {
-        const response = await fetch(`${window.API_BASE_URL}/ielts-audio`, {
+        const response = await fetch(`${window.API_BASE_URL}/api/ielts?type=audio`, {
             method: 'POST',
             body: formData
             // Content-Type header qo'ymamiz - browser avtomatik qo'shadi
@@ -514,7 +514,7 @@ async function saveTraining(stage) {
     }
     
     try {
-        const response = await fetch(`${window.API_BASE_URL}/ielts-trainings`, {
+            const response = await fetch(`${window.API_BASE_URL}/api/ielts?type=training`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
