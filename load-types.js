@@ -17,7 +17,14 @@ const typeSchema = new mongoose.Schema({
     status: { type: Boolean, default: false },
     gameMode1: { type: Number, default: 0 },
     gameMode2: { type: Number, default: 0 },
-    gameMode3: { type: Number, default: 0 }
+    gameMode3: { type: Number, default: 0 },
+    tenses: [{
+      name: String,
+      form: String,
+      uzbek: String,
+      example: String,
+      exampleUzbek: String
+    }]
   }],
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
@@ -38,56 +45,24 @@ async function loadTypes() {
     const typesData = JSON.parse(fs.readFileSync(typesPath, 'utf-8'));
     console.log(`${typesData.length} ta type topildi`);
 
-    // Bo'sh typelarni o'chirish (so'zlari bo'lmagan)
-    console.log('\nEski bo\'sh typelarni o\'chirish...');
-    const deleteResult = await Type.deleteMany({ 
-      $or: [
-        { words: { $exists: false } },
-        { words: { $size: 0 } }
-      ]
-    });
-    console.log(`${deleteResult.deletedCount} ta bo'sh type o'chirildi`);
+    // Barcha eski typelarni o'chirish
+    console.log('\nBarcha eski typelarni o\'chirish...');
+    const deleteResult = await Type.deleteMany({});
+    console.log(`${deleteResult.deletedCount} ta type o'chirildi`);
 
     // Har bir type'ni yuklash
     console.log('\nTypelarni yuklash...');
     let created = 0;
-    let updated = 0;
-    let skipped = 0;
 
     for (const typeData of typesData) {
-      const existingType = await Type.findOne({ type: typeData.type });
-
-      if (!existingType) {
-        // Yangi type yaratish
-        await Type.create(typeData);
-        console.log(`Yaratildi: ${typeData.displayName}`);
-        created++;
-      } else if (existingType.words && existingType.words.length > 0) {
-        // Mavjud va ichida so'zlar bor - faqat displayName yangilash
-        if (existingType.displayName !== typeData.displayName) {
-          existingType.displayName = typeData.displayName;
-          existingType.updatedAt = new Date();
-          await existingType.save();
-          console.log(`Yangilandi: ${typeData.displayName} (${existingType.words.length} so'z bilan)`);
-          updated++;
-        } else {
-          console.log(`O'zgarishsiz: ${typeData.displayName} (${existingType.words.length} so'z bilan)`);
-          skipped++;
-        }
-      } else {
-        // Mavjud lekin bo'sh - displayName yangilash
-        existingType.displayName = typeData.displayName;
-        existingType.updatedAt = new Date();
-        await existingType.save();
-        console.log(`Yangilandi: ${typeData.displayName} (bo'sh)`);
-        updated++;
-      }
+      // Yangi type yaratish
+      await Type.create(typeData);
+      console.log(`Yaratildi: ${typeData.displayName}`);
+      created++;
     }
 
     console.log('\nNatija:');
     console.log(`  Yaratildi: ${created}`);
-    console.log(`  Yangilandi: ${updated}`);
-    console.log(`  O'tkazildi: ${skipped}`);
     console.log(`  Jami: ${typesData.length}`);
 
     // Barcha typelarni ko'rsatish

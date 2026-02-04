@@ -33,7 +33,7 @@ export default async function handler(req, res) {
       const newWord = {
         english,
         uzbek,
-        description: description || null, // Tavsif bo'lsa qo'shish
+        description: description || null,
         status: false,
         gameMode1: 0,
         gameMode2: 0,
@@ -41,6 +41,13 @@ export default async function handler(req, res) {
       };
       
       typeDoc.words.push(newWord);
+      typeDoc.updatedAt = new Date();
+      const saved = await typeDoc.save();
+      
+      // Stats'ni o'chirib tashlash (yangi so'z qo'shilganda stats 0 bo'lishi kerak)
+      await TypeStats.deleteOne({ type });
+      
+      res.status(201).json(saved);
       typeDoc.updatedAt = new Date();
       const saved = await typeDoc.save();
       

@@ -63,7 +63,7 @@ export default async function handler(req, res) {
           newTypeDoc.displayName = displayName;
         }
 
-        newTypeDoc.words.push({
+        const newWordData = {
           english,
           uzbek,
           description,
@@ -71,7 +71,14 @@ export default async function handler(req, res) {
           gameMode1: word.gameMode1,
           gameMode2: word.gameMode2,
           gameMode3: word.gameMode3
-        });
+        };
+        
+        // Agar tenses berilgan bo'lsa (fe'l uchun), qo'shish
+        if (req.body.tenses && Array.isArray(req.body.tenses)) {
+          newWordData.tenses = req.body.tenses;
+        }
+        
+        newTypeDoc.words.push(newWordData);
         newTypeDoc.updatedAt = new Date();
         await newTypeDoc.save();
 
@@ -83,6 +90,12 @@ export default async function handler(req, res) {
         word.english = english;
         word.uzbek = uzbek;
         word.description = description;
+        
+        // Agar tenses berilgan bo'lsa (fe'l uchun), update qilish
+        if (req.body.tenses && Array.isArray(req.body.tenses)) {
+          word.tenses = req.body.tenses;
+        }
+        
         if (displayName !== undefined) {
           typeDoc.displayName = displayName;
         }

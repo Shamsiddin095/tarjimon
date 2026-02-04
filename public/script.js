@@ -188,26 +188,107 @@ function debounceSearch(e) {
     performSearch(query);
 }
 
+// Tenses'larni search index'ga qo'shish
+function buildSearchIndex(allWords) {
+    // Faqat base so'zlarni index qilish - tenses bo'yicha expand qilmaymiz
+    // Runtime'da qidiruvda verb conjugation'larni generate qilib qidiramiz
+    return allWords;
+}
+
 function performSearch(query) {
     const results = [];
     
-    // Barcha so'zlardan qidirish
-    allWordsForSearch.forEach(word => {
+    // Uzbek qidiruv uchun normalize qilish (bo'sh joylar va spacing)
+    const normalizeUzbek = (str) => {
+        return str.toLowerCase().trim();
+    };
+    
+    const normalizedQuery = normalizeUzbek(query);
+    
+    // DEBUG: Query'ni log qilish
+    console.log(`🔍 Search query: "${query}" (normalized: "${normalizedQuery}")`);
+    console.log(`📚 Searching in ${allWordsForSearch.length} entries`);
+    
+    // 1. Uzbek gap analyze qilish (Men yugurayapman, Men yugirraman, etc.)
+    if (window.analyzeUzbekAndFindConjugation) {
+        const analyzed = window.analyzeUzbekAndFindConjugation(query);
+        if (analyzed && analyzed.conjugation) {
+            console.log('✓ Found via Uzbek grammar analysis:', analyzed);
+            
+            // Verb base so'zini topish
+            const verbWord = allWordsForSearch.find(w => 
+                w.english === analyzed.englishVerb && w.type === 'fellar'
+            );
+            
+            if (verbWord) {
+                results.push({
+                    ...verbWord,
+                    relevance: 90,
+                    matchedText: query,
+                    translation: `${analyzed.englishVerb} (${analyzed.conjugation.name})`,
+                    displayType: 'grammarAnalysis',
+                    analysis: analyzed
+                });
+            }
+        }
+    }
+    
+    // 2. Barcha so'zlardan qidirish (base forms)
+    allWordsForSearch.forEach((word, index) => {
         let relevance = 0;
         let matchedText = '';
         let translation = '';
+        let displayType = 'word';
         
-        // English bo'yicha qidirish
-        if (word.english.toLowerCase().includes(query)) {
-            relevance = word.english.toLowerCase().startsWith(query) ? 100 : 50;
+        const englishLower = word.english ? word.english.toLowerCase().trim() : '';
+        const uzbekLower = word.uzbek ? normalizeUzbek(word.uzbek) : '';
+        
+        // English bo'yicha qidirish (base so'z)
+        if (englishLower.includes(normalizedQuery)) {
+            relevance = englishLower.startsWith(normalizedQuery) ? 100 : 50;
             matchedText = word.english;
             translation = word.uzbek;
+            displayType = 'word';
         }
-        // Uzbek bo'yicha qidirish
-        else if (word.uzbek.toLowerCase().includes(query)) {
-            relevance = word.uzbek.toLowerCase().startsWith(query) ? 100 : 50;
+        // Uzbek bo'yicha qidirish (base so'z)
+        else if (uzbekLower.includes(normalizedQuery)) {
+            relevance = uzbekLower.startsWith(normalizedQuery) ? 100 : 50;
             matchedText = word.uzbek;
             translation = word.english;
+            displayType = 'word';
+        }
+        // Fe'l bo'lsa, conjugation'larni ham generate qilib qidirish
+        else if (word.type === 'fellar' && window.generateVerbConjugation) {
+            try {
+                const conjugations = window.generateVerbConjugation(word.english, word.uzbek);
+                
+                // Conjugation'larda qidirish
+                for (let conj of conjugations) {
+                    const conjFormLower = (conj.form || '').toLowerCase().trim();
+                    const conjUzbLower = normalizeUzbek(conj.uzbek || '');
+                    
+                    // English conjugation form
+                    if (conjFormLower.includes(normalizedQuery)) {
+                        relevance = conjFormLower.startsWith(normalizedQuery) ? 75 : 40;
+                        matchedText = conj.form;
+                        translation = conj.uzbek;
+                        displayType = 'conjugation';
+                        break;
+                    }
+                    // Uzbek conjugation form
+                    else if (conjUzbLower.includes(normalizedQuery)) {
+                        relevance = conjUzbLower.startsWith(normalizedQuery) ? 75 : 40;
+                        matchedText = conj.uzbek;
+                        translation = conj.form;
+                        displayType = 'conjugation';
+                        
+                        console.log(`✓ Found Uzbek conjugation: "${conj.uzbek}" for verb "${word.english}"`);
+                        break;
+                    }
+                }
+            } catch (e) {
+                console.warn('Conjugation error:', e);
+            }
         }
         
         if (relevance > 0) {
@@ -215,10 +296,17 @@ function performSearch(query) {
                 ...word,
                 relevance,
                 matchedText,
-                translation
+                translation,
+                displayType
             });
         }
     });
+    
+    // DEBUG: Natijalarni log qilish
+    console.log(`Found ${results.length} results for "${query}"`);
+    if (results.length > 0) {
+        console.log('Top result:', results[0]);
+    }
     
     // Relevance bo'yicha sort qilish
     results.sort((a, b) => b.relevance - a.relevance);
@@ -247,18 +335,37 @@ function displaySearchResults(results, query) {
         const safeEnglish = word.english.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
         const safeUzbek = word.uzbek.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
         
+        // Agar conjugation form bo'lsa - metadata qo'shish
+        let additionalInfo = '';
+        if (word.isConjugation) {
+            // exampleUzbek'ni to'g'ri format qilish
+            const uzbekExample = word.exampleUzbek || word.tenseInfo?.exampleUzbek || '';
+            
+            additionalInfo = `
+                <div style="color: #667eea; font-size: 0.75em; margin-top: 2px; font-weight: 500;">
+                    🔗 ${word.originalEnglish} (${word.tenseName})
+                </div>
+                <div style="color: #666; font-size: 0.7em; margin-top: 2px; font-style: italic;">
+                    <strong>EN:</strong> "${word.example}"
+                </div>
+                ${uzbekExample ? `<div style="color: #666; font-size: 0.7em; margin-top: 1px; font-style: italic;">
+                    <strong>UZ:</strong> "${uzbekExample}"
+                </div>` : ''}
+            `;
+        }
+        
         return `
         <div style="
             padding: 8px 10px;
             margin-bottom: 6px;
-            background: #f8f9fa;
+            background: ${word.isConjugation ? '#f0f4ff' : '#f8f9fa'};
             border-radius: 6px;
-            border-left: 3px solid #667eea;
+            border-left: 3px solid ${word.isConjugation ? '#8b9bff' : '#667eea'};
             transition: all 0.2s;
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-        " onmouseover="this.style.background='#e3f2fd'" onmouseout="this.style.background='#f8f9fa'">
+        " onmouseover="this.style.background='#e3f2fd'" onmouseout="this.style.background='${word.isConjugation ? '#f0f4ff' : '#f8f9fa'}'">
             <div style="flex: 1;">
                 <div style="font-weight: 600; color: #667eea; margin-bottom: 3px; font-size: 0.85em;">
                     ${word.english}
@@ -266,9 +373,7 @@ function displaySearchResults(results, query) {
                 <div style="color: #666; font-size: 0.8em;">
                     ${word.uzbek}
                 </div>
-                <div style="color: #999; font-size: 0.7em; margin-top: 3px;">
-                    Unit ${word.unit}
-                </div>
+                ${additionalInfo}
             </div>
             <button 
                 onclick="speakSearchResult('${safeEnglish}', '${safeUzbek}')"
@@ -353,13 +458,14 @@ async function loadTypes() {
         const allStats = await statsRes.json();
         const allTypes = await typesRes.json();
         
-        // Search uchun barcha so'zlarni saqlab qo'yish
-        allWordsForSearch = allWords;
+        // Search uchun barcha so'zlarni saqlab qo'yish + tenses'larni indexga qo'shish
+        allWordsForSearch = buildSearchIndex(allWords);
         allTypesData = allTypes; // Global saqlash
         
         console.log('✅ So\'zlar yuklandi:', allWords);
         console.log('📊 Type stats yuklandi:', allStats);
         console.log('📚 Types yuklandi:', allTypes);
+        console.log('🔍 Search Index (tenses bilan):', allWordsForSearch);
 
         const typesList = document.getElementById('units-list');
         typesList.innerHTML = '';
@@ -711,6 +817,45 @@ async function loadTypeContent(type, container) {
         const uzbekInput = addWordSection.querySelector('.type-uzbek-input');
         const descInput = addWordSection.querySelector('.type-description-input');
         
+        // Auto-fill tenses uchun listener (faqat fe'llar uchun)
+        if (type === 'fellar') {
+            const autoFillBtn = document.createElement('button');
+            autoFillBtn.textContent = '🪄 Zamonlarni avtomatik to\'ldirish';
+            autoFillBtn.style.cssText = 'padding: 8px 12px; background: #f59e0b; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-bottom: 10px;';
+            
+            autoFillBtn.onclick = () => {
+                const english = englishInput.value.trim();
+                const uzbek = uzbekInput.value.trim();
+                
+                if (!english || !uzbek) {
+                    showNotification('⚠️ Avval inglizcha va o\'zbekcha so\'zni kiriting!', 'error');
+                    return;
+                }
+                
+                // Generate conjugations
+                const tenses = window.generateVerbConjugation(english, uzbek);
+                
+                // Fill all tense inputs
+                const tenseItems = addWordSection.querySelectorAll('.tense-item');
+                tenseItems.forEach((item, idx) => {
+                    if (tenses[idx]) {
+                        item.querySelector('.tense-form').value = tenses[idx].form;
+                        item.querySelector('.tense-uzbek').value = tenses[idx].uzbek;
+                        item.querySelector('.tense-example').value = tenses[idx].example;
+                        item.querySelector('.tense-example-uzbek').value = tenses[idx].exampleUzbek;
+                    }
+                });
+                
+                showNotification('✅ Zamonlar avtomatik to\'ldirildi! Kerak bo\'lsa tuzating.', 'success');
+            };
+            
+            // Insert button before tenses container
+            const tensesContainer = addWordSection.querySelector('.tenses-container');
+            if (tensesContainer) {
+                tensesContainer.parentElement.insertBefore(autoFillBtn, tensesContainer);
+            }
+        }
+        
         addBtn.addEventListener('click', async () => {
             const english = englishInput.value.trim();
             const uzbek = uzbekInput.value.trim();
@@ -721,16 +866,19 @@ async function loadTypeContent(type, container) {
                 return;
             }
             
+            // Agar fe'l qo'shilayotgan bo'lsa, tenses strukturasini qo'shish
+            let wordData = {
+                english,
+                uzbek,
+                type,
+                description: description || null
+            };
+            
             try {
                 const response = await fetch(`${window.API_BASE_URL}/words`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        english,
-                        uzbek,
-                        type,
-                        description: description || null
-                    })
+                    body: JSON.stringify(wordData)
                 });
                 
                 if (response.ok) {

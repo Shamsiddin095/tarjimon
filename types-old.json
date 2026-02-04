@@ -355,52 +355,42 @@
       }
     ]
   },
-  {
-    "type": "fellar",
-    "displayName": "⚡ Fe'llar",
-    "words": [
+ 
       {
-        "english": "go",
-        "uzbek": "bormoq",
-        "subcategory": "Harakatlar",
-        "description": "bir joydan boshqa joyga harakat qilish",
-        "status": false,
-        "gameMode1": 0,
-        "gameMode2": 0,
-        "gameMode3": 0
-      },
-      {
-        "english": "eat",
-        "uzbek": "ovqat yemoq",
-        "subcategory": "Umumiy",
-        "description": "gidani yutib olish",
-        "status": false,
-        "gameMode1": 0,
-        "gameMode2": 0,
-        "gameMode3": 0
-      },
-      {
-        "english": "run",
-        "uzbek": "yugurmoq",
-        "subcategory": "Jismiy Harakatlar",
-        "description": "tez yurish",
-        "status": false,
-        "gameMode1": 0,
-        "gameMode2": 0,
-        "gameMode3": 0
-      },
-      {
-        "english": "sleep",
-        "uzbek": "uxlamoq",
-        "subcategory": "Umumiy",
-        "description": "tungi viloyat",
-        "status": false,
-        "gameMode1": 0,
-        "gameMode2": 0,
-        "gameMode3": 0
-      }
-    ]
-  },
+  "type": "fellar",
+  "displayName": "⚡ Fe'llar",
+  "words": [
+    {
+      "english": "go",
+      "uzbek": "borish / ketish",
+      "subcategory": "Harakatlar",
+      "description": "Bir joydan boshqa joyga harakat qilish. Conjugations: go-went-gone",
+      "status": false,
+      "gameMode1": 0,
+      "gameMode2": 0,
+      "gameMode3": 0,
+      "tenses": [
+        { "name": "Present Simple", "form": "go/goes", "uzbek": "odatda boradi", "example": "I go to school every day.", "exampleUzbek": "Men har kuni maktabga boraman." },
+        { "name": "Present Continuous", "form": "am/is/are going", "uzbek": "hozir borayapti", "example": "I am going to school now.", "exampleUzbek": "Men hozir maktabga ketyapman." },
+        { "name": "Present Perfect", "form": "have/has gone", "uzbek": "borib ketgan (natija bor)", "example": "I have gone to school already.", "exampleUzbek": "Men allaqachon maktabga borib ketganman." },
+        { "name": "Present Perfect Continuous", "form": "have/has been going", "uzbek": "borib yuribdi", "example": "I have been going to school for two years.", "exampleUzbek": "Men ikki yildan beri maktabga qatnab yuribman." },
+        { "name": "Past Simple", "form": "went", "uzbek": "bordi", "example": "I went to school yesterday.", "exampleUzbek": "Men kecha maktabga bordim." },
+        { "name": "Past Continuous", "form": "was/were going", "uzbek": "borayotgan edi", "example": "I was going to school when it started raining.", "exampleUzbek": "Yomg‘ir yog‘a boshlaganda men maktabga ketayotgan edim." },
+        { "name": "Past Perfect", "form": "had gone", "uzbek": "undan oldin borib ketgan edi", "example": "I had gone to school before he arrived.", "exampleUzbek": "U kelishidan oldin men maktabga borib ketgan edim." },
+        { "name": "Past Perfect Continuous", "form": "had been going", "uzbek": "borib yurgan edi", "example": "I had been going to school for a year before I moved.", "exampleUzbek": "Ko‘chib ketishimdan oldin men bir yil davomida maktabga qatnab yurgan edim." },
+        { "name": "Future Simple", "form": "will go", "uzbek": "boradi", "example": "I will go to school tomorrow.", "exampleUzbek": "Men ertaga maktabga boraman." },
+        { "name": "Future Continuous", "form": "will be going", "uzbek": "borayotgan bo‘ladi", "example": "I will be going to school at 8 a.m.", "exampleUzbek": "Soat 8 da men maktabga ketayotgan bo‘laman." },
+        { "name": "Future Perfect", "form": "will have gone", "uzbek": "borib bo‘lgan bo‘ladi", "example": "I will have gone to school by 9 a.m.", "exampleUzbek": "Soat 9 ga kelib men maktabga borib bo‘lgan bo‘laman." },
+        { "name": "Future Perfect Continuous", "form": "will have been going", "uzbek": "ma’lum vaqt davomida borib yurgan bo‘ladi", "example": "I will have been going to school for five years by 2030.", "exampleUzbek": "2030-yilga kelib men besh yildan beri maktabga qatnab yurgan bo‘laman." },
+        { "name": "Conditional Simple", "form": "would go", "uzbek": "borardi", "example": "I would go to school if I had time.", "exampleUzbek": "Agar vaqtim bo‘lsa, men maktabga borardim." },
+        { "name": "Conditional Continuous", "form": "would be going", "uzbek": "borayotgan bo‘lardi", "example": "I would be going to school if I were not sick.", "exampleUzbek": "Agar kasal bo‘lmaganimda, men maktabga ketayotgan bo‘lardim." },
+        { "name": "Conditional Perfect", "form": "would have gone", "uzbek": "borib ketgan bo‘lardi", "example": "I would have gone to school if it had not rained.", "exampleUzbek": "Agar yomg‘ir yog‘maganida, men maktabga borib ketgan bo‘lardim." },
+        { "name": "Conditional Perfect Continuous", "form": "would have been going", "uzbek": "borib yurgan bo‘lardi", "example": "I would have been going to school if I had stayed in the city.", "exampleUzbek": "Agar shaharda qolganimda, men maktabga bir muddat qatnab yurgan bo‘lardim." }
+      ]
+    }
+  ]
+},
+
   {
     "type": "yordamchi_fellar",
     "displayName": "🔀 Yordamchi Fe'llar",
