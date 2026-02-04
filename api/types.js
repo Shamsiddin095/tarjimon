@@ -21,13 +21,11 @@ export default async function handler(req, res) {
 
     const types = await Type.find().select('type displayName words');
     
-    const typesData = types
-      .filter(t => t.words && t.words.length > 0) // Faqat so'zlari bor types
-      .map(t => ({
-        type: t.type,
-        displayName: t.displayName || '',
-        wordCount: t.words.length
-      }));
+    const typesData = types.map(t => ({
+      type: t.type,
+      displayName: t.displayName || '',
+      wordCount: t.words.length
+    }));
     
     res.status(200).json(typesData);
   } catch (error) {
