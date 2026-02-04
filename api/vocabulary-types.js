@@ -1,19 +1,5 @@
 import { connectToDatabase, getModels } from './db.js';
 
-// Predefined vocabulary types - hardcoded list
-const VOCABULARY_TYPES = [
-  { type: 'mevalar', displayName: '🍎 Mevalar' },
-  { type: 'jihozlar', displayName: '🔧 Jihozlar' },
-  { type: 'kasblar', displayName: '👨‍💼 Kasblar' },
-  { type: 'hayvonlar', displayName: '🐾 Hayvonlar' },
-  { type: 'raqamlar', displayName: '🔢 Raqamlar' },
-  { type: 'rangli', displayName: '🌈 Ranglar' },
-  { type: 'oilam', displayName: '👨‍👩‍👧‍👦 O\'ila Azo\'lari' },
-  { type: 'jismiy', displayName: '🏃 Jismiy Mashqlar' },
-  { type: 'taom', displayName: '🍽️ Taomlar' },
-  { type: 'uy', displayName: '🏠 Uy Narsalari' }
-];
-
 export default async function handler(req, res) {
   // CORS headers
   res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -30,8 +16,18 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Return hardcoded vocabulary types instead of querying database
-    res.status(200).json(VOCABULARY_TYPES);
+    await connectToDatabase();
+    const { Type } = getModels();
+
+    // MongoDB'dan barcha typelarni olish
+    const types = await Type.find().select('type displayName').sort({ type: 1 });
+    
+    const vocabularyTypes = types.map(t => ({
+      type: t.type,
+      displayName: t.displayName || t.type
+    }));
+    
+    res.status(200).json(vocabularyTypes);
   } catch (error) {
     console.error('API error:', error);
     res.status(500).json({ error: error.message });

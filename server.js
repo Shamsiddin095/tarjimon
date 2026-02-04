@@ -105,10 +105,17 @@ const VOCABULARY_TYPES = [
 ];
 
 // API Routes (STATIC dan OLDIN!)
-// Types listini olish
+// Types listini olish - MongoDB'dan
 app.get('/api/vocabulary-types', async (req, res) => {
   try {
-    res.json(VOCABULARY_TYPES);
+    const types = await Type.find().select('type displayName').sort({ type: 1 });
+    
+    const vocabularyTypes = types.map(t => ({
+      type: t.type,
+      displayName: t.displayName || t.type
+    }));
+    
+    res.json(vocabularyTypes);
   } catch (err) {
     res.status(400).json('Xato: ' + err.message);
   }
