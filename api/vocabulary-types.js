@@ -19,13 +19,15 @@ export default async function handler(req, res) {
     await connectToDatabase();
     const { Type } = getModels();
 
-    // Get all vocabulary types (type names and display names)
-    const types = await Type.find().select('type displayName');
+    // Get all vocabulary types (type names and display names) - bo'sh types'ni o'tkazib yuborish
+    const types = await Type.find().select('type displayName words');
     
-    const vocabularyTypes = types.map(t => ({
-      type: t.type,
-      displayName: t.displayName || t.type
-    }));
+    const vocabularyTypes = types
+      .filter(t => t.words && t.words.length > 0) // Faqat so'zlari bor types
+      .map(t => ({
+        type: t.type,
+        displayName: t.displayName || t.type
+      }));
     
     res.status(200).json(vocabularyTypes);
   } catch (error) {
