@@ -1,3 +1,60 @@
+# 📚 Vocabulary App - O'zbekcha-Inglizcha Tarjima Modeli
+
+> **🎯 Loyihaning asosiy xususiyati:** To'liq o'zbekcha-inglizcha tarjima modeli — faqat bitta so'z emas, butun gaplarni grammatik jihatdan to'g'ri tarjima qiladi!
+
+---
+
+## 🇺🇿➡️🇬🇧 TARJIMA MODELI
+
+### **Qo'shimcha Fayllar:**
+- [TRANSLATION_MODEL_DOCUMENTATION.md](./TRANSLATION_MODEL_DOCUMENTATION.md) — To'liq dokumentatsiya
+- `api/types-extended.json` — Kengaytirilgan so'z lug'ati
+- `api/irregular-verbs.json` — Noto'g'ri fe'llar jadvali
+- `api/uzbek-morphology.js` — Morfoloji analiz
+- `api/translation-rules.js` — Tarjima qoidalari
+- `api/sentence-translator.js` — Asosiy tarjima modeli
+- `api/post-processor.js` — Post-processing
+- `api/translate.js` — REST API
+
+### **REST API Endpoint'lari:**
+
+```bash
+# Bir gapni tarjima qilish
+POST /api/translate-v2/translate
+{
+  "text": "Men Toshkentga bordim",
+  "include_analysis": true
+}
+
+# Bir nechta gaplarni tarjima qilish
+POST /api/translate-v2/translate-batch
+{
+  "sentences": ["Men Toshkentga bordim", "U kitob o'qiyapti"]
+}
+
+# Morfoloji analiz
+POST /api/translate-v2/analyze
+{
+  "text": "Men Toshkentga bordim"
+}
+
+# Fe'l formlarini ko'rsatish
+POST /api/translate-v2/verb-forms
+{
+  "infinitive": "go",
+  "uzb_stem": "bor"
+}
+```
+
+### **Tarjima Misoli:**
+```
+O'zbekcha: "Men Toshkentga bordim"
+↓
+Inglizcha: "I went to Tashkent."
+```
+
+---
+
 # 📚 Vocabulary App - Vercel Deployment Guide
 
 ## 🚀 Vercel'ga deployment qilish

@@ -2,30 +2,13 @@
   {
     "type": "otlar",
     "displayName": "🗣️ Otlar",
+    "part_of_speech": "noun",
     "words": [
-      {
-        "english": "rice",
-        "uzbek": "guruch",
-        "subcategory": "Taomlar",
-        "description": "oq yoki boz danasi",
-        "status": false,
-        "gameMode1": 0,
-        "gameMode2": 0,
-        "gameMode3": 0
-      },
-      {
-        "english": "bread",
-        "uzbek": "non",
-        "subcategory": "Taomlar",
-        "description": "bugdoydan tayyorlangan",
-        "status": false,
-        "gameMode1": 0,
-        "gameMode2": 0,
-        "gameMode3": 0
-      },
+      
       {
         "english": "apple",
         "uzbek": "olma",
+        "part_of_speech": "noun",
         "subcategory": "Mevalar",
         "description": "qizil yoki yashil mevalar",
         "status": false,
@@ -36,262 +19,26 @@
       {
         "english": "banana",
         "uzbek": "banan",
+        "part_of_speech": "noun",
         "subcategory": "Mevalar",
         "description": "sariq meva",
         "status": false,
         "gameMode1": 0,
         "gameMode2": 0,
         "gameMode3": 0
-      },
-      {
-        "english": "carrot",
-        "uzbek": "sabzi",
-        "subcategory": "Sabzavotlar",
-        "description": "to'q sariq sabzavot",
-        "status": false,
-        "gameMode1": 0,
-        "gameMode2": 0,
-        "gameMode3": 0
-      },
-      {
-        "english": "tomato",
-        "uzbek": "pomidor",
-        "subcategory": "Sabzavotlar",
-        "description": "qizil sabzavot",
-        "status": false,
-        "gameMode1": 0,
-        "gameMode2": 0,
-        "gameMode3": 0
-      },
-      {
-        "english": "dog",
-        "uzbek": "it",
-        "subcategory": "Hayvonlar",
-        "description": "uyda yashiydagan hayvon",
-        "status": false,
-        "gameMode1": 0,
-        "gameMode2": 0,
-        "gameMode3": 0
-      },
-      {
-        "english": "cat",
-        "uzbek": "mushuk",
-        "subcategory": "Hayvonlar",
-        "description": "mushuk o'yini sevadi",
-        "status": false,
-        "gameMode1": 0,
-        "gameMode2": 0,
-        "gameMode3": 0
-      },
-      {
-        "english": "doctor",
-        "uzbek": "doktor",
-        "subcategory": "Kasblar",
-        "description": "kasallarni davolovchi",
-        "status": false,
-        "gameMode1": 0,
-        "gameMode2": 0,
-        "gameMode3": 0
-      },
-      {
-        "english": "teacher",
-        "uzbek": "o'qituvchi",
-        "subcategory": "Kasblar",
-        "description": "talabalarni o'rgatadiagan",
-        "status": false,
-        "gameMode1": 0,
-        "gameMode2": 0,
-        "gameMode3": 0
-      },
-      {
-        "english": "mother",
-        "uzbek": "ona",
-        "subcategory": "O'ila Azo'lari",
-        "description": "ayol farzandi tug'adi",
-        "status": false,
-        "gameMode1": 0,
-        "gameMode2": 0,
-        "gameMode3": 0
-      },
-      {
-        "english": "father",
-        "uzbek": "ota",
-        "subcategory": "O'ila Azo'lari",
-        "description": "erkak farzandi tug'adi",
-        "status": false,
-        "gameMode1": 0,
-        "gameMode2": 0,
-        "gameMode3": 0
-      },
-      {
-        "english": "hammer",
-        "uzbek": "bolg'a",
-        "subcategory": "Jihozlar",
-        "description": "chopon tushirish uchun",
-        "status": false,
-        "gameMode1": 0,
-        "gameMode2": 0,
-        "gameMode3": 0
-      },
-      {
-        "english": "screwdriver",
-        "uzbek": "vintgvert",
-        "subcategory": "Jihozlar",
-        "description": "vintar buhrash uchun",
-        "status": false,
-        "gameMode1": 0,
-        "gameMode2": 0,
-        "gameMode3": 0
-      },
-      {
-        "english": "table",
-        "uzbek": "stol",
-        "subcategory": "Uy Narsalari",
-        "description": "oyi tekis buyum",
-        "status": false,
-        "gameMode1": 0,
-        "gameMode2": 0,
-        "gameMode3": 0
-      },
-      {
-        "english": "chair",
-        "uzbek": "stul",
-        "subcategory": "Uy Narsalari",
-        "description": "o'tirish uchun",
-        "status": false,
-        "gameMode1": 0,
-        "gameMode2": 0,
-        "gameMode3": 0
-      },
-      {
-        "english": "Tashkent",
-        "uzbek": "Toshkent",
-        "subcategory": "Shaharlar",
-        "description": "O'zbekistonning poytaxti",
-        "status": false,
-        "gameMode1": 0,
-        "gameMode2": 0,
-        "gameMode3": 0
-      },
-      {
-        "english": "Samarkand",
-        "uzbek": "Samarqand",
-        "subcategory": "Shaharlar",
-        "description": "Sharq tilsimining markazi",
-        "status": false,
-        "gameMode1": 0,
-        "gameMode2": 0,
-        "gameMode3": 0
-      },
-      {
-        "english": "England",
-        "uzbek": "Angliya",
-        "subcategory": "Davlatlar",
-        "description": "Yevropa mamlakati",
-        "status": false,
-        "gameMode1": 0,
-        "gameMode2": 0,
-        "gameMode3": 0
-      },
-      {
-        "english": "France",
-        "uzbek": "Frantsiya",
-        "subcategory": "Davlatlar",
-        "description": "Yevropa davlati",
-        "status": false,
-        "gameMode1": 0,
-        "gameMode2": 0,
-        "gameMode3": 0
-      },
-      {
-        "english": "computer",
-        "uzbek": "kompyuter",
-        "subcategory": "Texnologiya",
-        "description": "hisoblash mashinasi",
-        "status": false,
-        "gameMode1": 0,
-        "gameMode2": 0,
-        "gameMode3": 0
-      },
-      {
-        "english": "smartphone",
-        "uzbek": "smartfon",
-        "subcategory": "Texnologiya",
-        "description": "qo'li kompyuteri",
-        "status": false,
-        "gameMode1": 0,
-        "gameMode2": 0,
-        "gameMode3": 0
-      },
-      {
-        "english": "football",
-        "uzbek": "futbol",
-        "subcategory": "Sport",
-        "description": "to'pli o'yna",
-        "status": false,
-        "gameMode1": 0,
-        "gameMode2": 0,
-        "gameMode3": 0
-      },
-      {
-        "english": "basketball",
-        "uzbek": "basketbol",
-        "subcategory": "Sport",
-        "description": "yuqori xavfda o'yna",
-        "status": false,
-        "gameMode1": 0,
-        "gameMode2": 0,
-        "gameMode3": 0
-      },
-      {
-        "english": "guitar",
-        "uzbek": "gitar",
-        "subcategory": "Musiqa",
-        "description": "simli cholg'u",
-        "status": false,
-        "gameMode1": 0,
-        "gameMode2": 0,
-        "gameMode3": 0
-      },
-      {
-        "english": "piano",
-        "uzbek": "pianino",
-        "subcategory": "Musiqa",
-        "description": "kalamushka bilan o'yna cholg'u",
-        "status": false,
-        "gameMode1": 0,
-        "gameMode2": 0,
-        "gameMode3": 0
-      },
-      {
-        "english": "airport",
-        "uzbek": "aeroport",
-        "subcategory": "Sayohat",
-        "description": "samolyot uchuvchi joy",
-        "status": false,
-        "gameMode1": 0,
-        "gameMode2": 0,
-        "gameMode3": 0
-      },
-      {
-        "english": "hotel",
-        "uzbek": "mehmonxona",
-        "subcategory": "Sayohat",
-        "description": "sayoxat paytida turadigan joy",
-        "status": false,
-        "gameMode1": 0,
-        "gameMode2": 0,
-        "gameMode3": 0
       }
+     
     ]
   },
   {
     "type": "sonlar",
     "displayName": "🔢 Sonlar",
+    "part_of_speech": "numeral",
     "words": [
       {
         "english": "one",
         "uzbek": "bir",
+        "part_of_speech": "numeral",
         "description": "birinchi raqam",
         "status": false,
         "gameMode1": 0,
@@ -301,6 +48,7 @@
       {
         "english": "two",
         "uzbek": "ikki",
+        "part_of_speech": "numeral",
         "description": "ikkinchi raqam",
         "status": false,
         "gameMode1": 0,
@@ -312,10 +60,12 @@
   {
     "type": "sifatlar",
     "displayName": "✨ Sifatlar",
+    "part_of_speech": "adjective",
     "words": [
       {
         "english": "beautiful",
         "uzbek": "chiroyli",
+        "part_of_speech": "adjective",
         "subcategory": "Umumiy",
         "description": "juda yoqimli",
         "status": false,
@@ -326,54 +76,35 @@
       {
         "english": "happy",
         "uzbek": "baxtli",
+        "part_of_speech": "adjective",
         "subcategory": "Umumiy",
         "description": "xushbatli hol",
         "status": false,
         "gameMode1": 0,
         "gameMode2": 0,
         "gameMode3": 0
-      },
-      {
-        "english": "red",
-        "uzbek": "qizil",
-        "subcategory": "Ranglar",
-        "description": "xavf va olov rangi",
-        "status": false,
-        "gameMode1": 0,
-        "gameMode2": 0,
-        "gameMode3": 0
-      },
-      {
-        "english": "blue",
-        "uzbek": "ko'k",
-        "subcategory": "Ranglar",
-        "description": "osmon rangi",
-        "status": false,
-        "gameMode1": 0,
-        "gameMode2": 0,
-        "gameMode3": 0
       }
+     
     ]
   },
   {
     "type": "fellar",
     "displayName": "⚡ Fe'llar",
+    "part_of_speech": "verb",
     "words": [
       {
         "english": "go",
-        "uzbek": "bormoq",
+        "uzbek": "bor",
+        "part_of_speech": "verb",
         "subcategory": "Harakatlar",
         "description": "bir joydan boshqa joyga harakat qilish",
-        "status": false,
-        "gameMode1": 0,
-        "gameMode2": 0,
-        "gameMode3": 0
-      },
-      {
-        "english": "eat",
-        "uzbek": "ovqat yemoq",
-        "subcategory": "Umumiy",
-        "description": "gidani yutib olish",
+        "is_irregular": true,
+        "verb_forms": {
+          "base": "go",
+          "past": "went",
+          "past_participle": "gone",
+          "present_participle": "going"
+        },
         "status": false,
         "gameMode1": 0,
         "gameMode2": 0,
@@ -381,83 +112,36 @@
       },
       {
         "english": "run",
-        "uzbek": "yugurmoq",
+        "uzbek": "yugur",
+        "part_of_speech": "verb",
         "subcategory": "Jismiy Harakatlar",
         "description": "tez yurish",
-        "status": false,
-        "gameMode1": 0,
-        "gameMode2": 0,
-        "gameMode3": 0
-      },
-      {
-        "english": "sleep",
-        "uzbek": "uxlamoq",
-        "subcategory": "Umumiy",
-        "description": "tungi viloyat",
-        "status": false,
-        "gameMode1": 0,
-        "gameMode2": 0,
-        "gameMode3": 0
-      }
-    ]
-  },
-  {
-    "type": "yordamchi_fellar",
-    "displayName": "🔀 Yordamchi Fe'llar",
-    "words": [
-      {
-        "english": "put on",
-        "uzbek": "kiyib olish",
-        "subcategory": "Phrasal Verbs",
-        "description": "paxta yoki oyoq kiyimini kiyish",
-        "status": false,
-        "gameMode1": 0,
-        "gameMode2": 0,
-        "gameMode3": 0
-      },
-      {
-        "english": "take off",
-        "uzbek": "chiqib qolish",
-        "subcategory": "Phrasal Verbs",
-        "description": "uchun chiqib qolish yoki kiyimni tushurib qolish",
+        "is_irregular": true,
+        "verb_forms": {
+          "base": "run",
+          "past": "ran",
+          "past_participle": "run",
+          "present_participle": "running"
+        },
         "status": false,
         "gameMode1": 0,
         "gameMode2": 0,
         "gameMode3": 0
       }
+      
     ]
   },
-  {
-    "type": "idiomalar",
-    "displayName": "💡 Idiomalar",
-    "words": [
-      {
-        "english": "piece of cake",
-        "uzbek": "juda oson",
-        "description": "vazifani oson aytish",
-        "status": false,
-        "gameMode1": 0,
-        "gameMode2": 0,
-        "gameMode3": 0
-      },
-      {
-        "english": "break the ice",
-        "uzbek": "muloqot boshlash",
-        "description": "birinchi suhbat boshlash",
-        "status": false,
-        "gameMode1": 0,
-        "gameMode2": 0,
-        "gameMode3": 0
-      }
-    ]
-  },
+ 
   {
     "type": "egalar",
     "displayName": "👤 Egalar",
+    "part_of_speech": "pronoun",
     "words": [
       {
         "english": "I",
         "uzbek": "men",
+        "part_of_speech": "pronoun",
+        "grammatical_role": "subject",
         "subcategory": "Shaxsiy Egalar",
         "description": "birinchi shaxs yakka",
         "status": false,
@@ -468,6 +152,8 @@
       {
         "english": "you",
         "uzbek": "siz",
+        "part_of_speech": "pronoun",
+        "grammatical_role": "subject",
         "subcategory": "Shaxsiy Egalar",
         "description": "ikkinchi shaxs",
         "status": false,
@@ -478,6 +164,8 @@
       {
         "english": "he",
         "uzbek": "u (erkak)",
+        "part_of_speech": "pronoun",
+        "grammatical_role": "subject",
         "subcategory": "Shaxsiy Egalar",
         "description": "uchinchi shaxs erkak",
         "status": false,
@@ -487,7 +175,9 @@
       },
       {
         "english": "she",
-        "uzbek": "u (ayol)",
+        "uzbek": "u",
+        "part_of_speech": "pronoun",
+        "grammatical_role": "subject",
         "subcategory": "Shaxsiy Egalar",
         "description": "uchinchi shaxs ayol",
         "status": false,
@@ -497,7 +187,9 @@
       },
       {
         "english": "it",
-        "uzbek": "u (narsa)",
+        "uzbek": "u",
+        "part_of_speech": "pronoun",
+        "grammatical_role": "subject",
         "subcategory": "Shaxsiy Egalar",
         "description": "uchinchi shaxs narsa",
         "status": false,
@@ -508,6 +200,8 @@
       {
         "english": "we",
         "uzbek": "biz",
+        "part_of_speech": "pronoun",
+        "grammatical_role": "subject",
         "subcategory": "Shaxsiy Egalar",
         "description": "birinchi shaxs ko'plik",
         "status": false,
@@ -518,6 +212,8 @@
       {
         "english": "they",
         "uzbek": "ular",
+        "part_of_speech": "pronoun",
+        "grammatical_role": "subject",
         "subcategory": "Shaxsiy Egalar",
         "description": "uchinchi shaxs ko'plik",
         "status": false,
@@ -528,6 +224,8 @@
       {
         "english": "me",
         "uzbek": "meni",
+        "part_of_speech": "pronoun",
+        "grammatical_role": "object",
         "subcategory": "Ob'ektiv Egalar",
         "description": "birinchi shaxs ob'ekt",
         "status": false,
@@ -538,6 +236,8 @@
       {
         "english": "him",
         "uzbek": "uni (erkak)",
+        "part_of_speech": "pronoun",
+        "grammatical_role": "object",
         "subcategory": "Ob'ektiv Egalar",
         "description": "uchinchi shaxs erkak ob'ekt",
         "status": false,
@@ -547,7 +247,9 @@
       },
       {
         "english": "her",
-        "uzbek": "uni (ayol)",
+        "uzbek": "uni",
+        "part_of_speech": "pronoun",
+        "grammatical_role": "object",
         "subcategory": "Ob'ektiv Egalar",
         "description": "uchinchi shaxs ayol ob'ekt",
         "status": false,
@@ -558,6 +260,8 @@
       {
         "english": "us",
         "uzbek": "bizni",
+        "part_of_speech": "pronoun",
+        "grammatical_role": "object",
         "subcategory": "Ob'ektiv Egalar",
         "description": "birinchi shaxs ko'plik ob'ekt",
         "status": false,
@@ -568,138 +272,10 @@
       {
         "english": "them",
         "uzbek": "ularni",
+        "part_of_speech": "pronoun",
+        "grammatical_role": "object",
         "subcategory": "Ob'ektiv Egalar",
         "description": "uchinchi shaxs ko'plik ob'ekt",
-        "status": false,
-        "gameMode1": 0,
-        "gameMode2": 0,
-        "gameMode3": 0
-      },
-      {
-        "english": "my",
-        "uzbek": "mening",
-        "subcategory": "Egalik Egalar",
-        "description": "birinchi shaxs egalik",
-        "status": false,
-        "gameMode1": 0,
-        "gameMode2": 0,
-        "gameMode3": 0
-      },
-      {
-        "english": "your",
-        "uzbek": "sizning",
-        "subcategory": "Egalik Egalar",
-        "description": "ikkinchi shaxs egalik",
-        "status": false,
-        "gameMode1": 0,
-        "gameMode2": 0,
-        "gameMode3": 0
-      },
-      {
-        "english": "his",
-        "uzbek": "uning",
-        "subcategory": "Egalik Egalar",
-        "description": "uchinchi shaxs erkak egalik",
-        "status": false,
-        "gameMode1": 0,
-        "gameMode2": 0,
-        "gameMode3": 0
-      },
-      {
-        "english": "her",
-        "uzbek": "uning (ayol)",
-        "subcategory": "Egalik Egalar",
-        "description": "uchinchi shaxs ayol egalik",
-        "status": false,
-        "gameMode1": 0,
-        "gameMode2": 0,
-        "gameMode3": 0
-      },
-      {
-        "english": "its",
-        "uzbek": "uning",
-        "subcategory": "Egalik Egalar",
-        "description": "uchinchi shaxs narsa egalik",
-        "status": false,
-        "gameMode1": 0,
-        "gameMode2": 0,
-        "gameMode3": 0
-      },
-      {
-        "english": "our",
-        "uzbek": "bizning",
-        "subcategory": "Egalik Egalar",
-        "description": "birinchi shaxs ko'plik egalik",
-        "status": false,
-        "gameMode1": 0,
-        "gameMode2": 0,
-        "gameMode3": 0
-      },
-      {
-        "english": "their",
-        "uzbek": "ularning",
-        "subcategory": "Egalik Egalar",
-        "description": "uchinchi shaxs ko'plik egalik",
-        "status": false,
-        "gameMode1": 0,
-        "gameMode2": 0,
-        "gameMode3": 0
-      },
-      {
-        "english": "mine",
-        "uzbek": "meniki",
-        "subcategory": "Mustaqil Egalik Egalar",
-        "description": "mening bo'lgan narsa",
-        "status": false,
-        "gameMode1": 0,
-        "gameMode2": 0,
-        "gameMode3": 0
-      },
-      {
-        "english": "yours",
-        "uzbek": "sizniki",
-        "subcategory": "Mustaqil Egalik Egalar",
-        "description": "sizning bo'lgan narsa",
-        "status": false,
-        "gameMode1": 0,
-        "gameMode2": 0,
-        "gameMode3": 0
-      },
-      {
-        "english": "his",
-        "uzbek": "uniki",
-        "subcategory": "Mustaqil Egalik Egalar",
-        "description": "uning bo'lgan narsa",
-        "status": false,
-        "gameMode1": 0,
-        "gameMode2": 0,
-        "gameMode3": 0
-      },
-      {
-        "english": "hers",
-        "uzbek": "uniki (ayol)",
-        "subcategory": "Mustaqil Egalik Egalar",
-        "description": "uning bo'lgan narsa (ayol)",
-        "status": false,
-        "gameMode1": 0,
-        "gameMode2": 0,
-        "gameMode3": 0
-      },
-      {
-        "english": "ours",
-        "uzbek": "bizniki",
-        "subcategory": "Mustaqil Egalik Egalar",
-        "description": "bizning bo'lgan narsa",
-        "status": false,
-        "gameMode1": 0,
-        "gameMode2": 0,
-        "gameMode3": 0
-      },
-      {
-        "english": "theirs",
-        "uzbek": "ularniki",
-        "subcategory": "Mustaqil Egalik Egalar",
-        "description": "ularning bo'lgan narsa",
         "status": false,
         "gameMode1": 0,
         "gameMode2": 0,
