@@ -209,10 +209,93 @@ function performSearch(query) {
     console.log(`🔍 Search query: "${query}" (normalized: "${normalizedQuery}")`);
     console.log(`📚 Searching in ${allWordsForSearch.length} entries`);
     
+    const translateClause = (clause) => {
+        if (typeof window.translatePresentSimple === 'function') {
+            const ps = window.translatePresentSimple(clause, {
+                allWordsForSearch,
+                searchLanguage,
+                displaySentenceInSearchModal,
+                speakWord,
+                returnOnly: true
+            });
+            if (ps && ps.english) return ps;
+        }
+
+        if (typeof window.translateSentenceAndDisplay === 'function') {
+            const pc = window.translateSentenceAndDisplay(clause, {
+                allWordsForSearch,
+                searchLanguage,
+                displaySentenceInSearchModal,
+                speakWord,
+                returnOnly: true
+            });
+            if (pc && pc.english) return pc;
+        }
+
+        return null;
+    };
+
+    const handleCompoundSentence = (text) => {
+        if (searchLanguage !== 'uz-en') return false;
+
+        const lower = text.toLowerCase();
+        let connector = ' and ';
+        let parts = null;
+
+        if (/\blekin\b|\bammo\b/.test(lower)) {
+            connector = ' while ';
+            parts = text.split(/\blekin\b|\bammo\b/i);
+        } else if (/[,.;]/.test(text)) {
+            parts = text.split(/[,.;]/);
+        }
+
+        if (!parts || parts.length < 2) return false;
+
+        const translatedParts = [];
+        const words = [];
+
+        parts.map(p => p.trim()).filter(Boolean).forEach(part => {
+            const data = translateClause(part);
+            if (data && data.english) {
+                translatedParts.push(data.english);
+                if (Array.isArray(data.words)) {
+                    words.push(...data.words);
+                }
+            }
+        });
+
+        if (translatedParts.length < 2) return false;
+
+        const combined = translatedParts.join(connector).replace(/\s+/g, ' ').trim();
+
+        displaySentenceInSearchModal({
+            success: true,
+            words,
+            structure: {
+                subject: [],
+                verb: [],
+                preposition: [],
+                noun: [],
+                adjective: [],
+                adverb: []
+            },
+            english: combined,
+            tense: 'Mixed'
+        });
+
+        speakWord(combined, 'en');
+        return true;
+    };
+
     // YANGI: Agar bir nechta so'z bo'lsa (gap bo'lsa), gap tarjimasini amalga oshirish
     const wordCount = normalizedQuery.split(/\s+/).length;
-    const isUzbekMorphWord = /((yap|ayap|mayap)(man|san|miz|siz|ti|dilar)(mi)?)$/.test(normalizedQuery) || /((a|i)?man|asan|adi|amiz|asiz|adilar)$/.test(normalizedQuery) || /(ga|ka|qa|ke|da|ta|dan|tan)$/.test(normalizedQuery);
+    const isUzbekMorphWord = /((yap|ayap|mayap)(man|san|miz|siz|ti|dilar)(mi)?)$/.test(normalizedQuery)
+        || /((a|i)?man|asan|adi|amiz|asiz|adilar|mayman|maysan|maydi|maymiz|maysiz|maydilar|mayaptilarmi|manmi|sanmi|mizmi|sizmi|adimi|aydimi|ydimi|amanmi|asanmi|amizmi|asizmi|adilar(mi)?|maymanmi|maysanmi|maymizmi|maysizmi|maydimi|maydilarmi|ymanmi|ymizmi|ydilarmi)$/.test(normalizedQuery)
+        || /(ga|ka|qa|ke|da|ta|dan|tan)$/.test(normalizedQuery);
     if (wordCount > 1 || (searchLanguage === 'uz-en' && isUzbekMorphWord)) {
+        if (handleCompoundSentence(query)) {
+            return;
+        }
         // Gap tarjimasini chaqirish
         let handled = false;
         if (typeof window.translatePresentSimple === 'function') {

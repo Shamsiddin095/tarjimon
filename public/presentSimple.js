@@ -5,7 +5,8 @@
             allWordsForSearch = window.allWordsForSearch || [],
             searchLanguage = window.searchLanguage || 'uz-en',
             displaySentenceInSearchModal = window.displaySentenceInSearchModal,
-            speakWord = window.speakWord
+            speakWord = window.speakWord,
+            returnOnly = false
         } = context;
 
         if (searchLanguage !== 'uz-en') {
@@ -25,12 +26,21 @@
             return /(yap|ayap|mayap)(man|san|miz|siz|ti|dilar)?(mi)?$/.test(token);
         };
 
+        const isUzbekNegativeSimple = (token) => {
+            return /(mayman|maysan|maydi|maymiz|maysiz|maydilar)$/.test(token);
+        };
+
+        const isUzbekQuestionSimple = (token) => {
+            return /(manmi|sanmi|mizmi|sizmi|adimi|aydimi|ydimi|adilar(mi)?|ymanmi|ymizmi|ydilarmi|maymanmi|maysanmi|maymizmi|maysizmi|maydimi|maydilarmi)$/.test(token) || /(mi)$/.test(token);
+        };
+
         const stripUzbekPresentSimpleSuffix = (token) => {
             const suffixes = [
+                'mayman', 'maysan', 'maydi', 'maymiz', 'maysiz', 'maydilar',
                 'amisanmi', 'amisan', 'amisanmi',
-                'amanmi', 'asanmi', 'adimi', 'amizmi', 'asizmi', 'adilarmi',
-                'aman', 'asan', 'adi', 'amiz', 'asiz', 'adilar',
-                'man', 'san', 'miz', 'siz', 'di'
+                'amanmi', 'asanmi', 'adimi', 'aydimi', 'ydimi', 'amizmi', 'asizmi', 'adilarmi', 'ymanmi', 'ymizmi', 'ydilarmi',
+                'aman', 'asan', 'aydi', 'ydi', 'adi', 'amiz', 'asiz', 'adilar', 'yman', 'ymiz', 'ydilar',
+                'man', 'san', 'miz', 'siz', 'di', 'ydi'
             ];
 
             for (const suffix of suffixes) {
@@ -59,6 +69,43 @@
                 'ular': 'they'
             };
             return map[token] || null;
+        };
+
+        const detectPronounFromVerbToken = (token) => {
+            if (/maymanmi$/.test(token)) return 'I';
+            if (/maysanmi$/.test(token)) return 'you';
+            if (/maymizmi$/.test(token)) return 'we';
+            if (/maysizmi$/.test(token)) return 'you';
+            if (/maydilarmi$/.test(token)) return 'they';
+            if (/maydimi$/.test(token)) return 'he';
+            if (/mayman$/.test(token)) return 'I';
+            if (/maysan$/.test(token)) return 'you';
+            if (/maymiz$/.test(token)) return 'we';
+            if (/maysiz$/.test(token)) return 'you';
+            if (/maydilar$/.test(token)) return 'they';
+            if (/maydi$/.test(token)) return 'he';
+            if (/(amanmi|manmi)$/.test(token)) return 'I';
+            if (/(asanmi|sanmi)$/.test(token)) return 'you';
+            if (/(amizmi|mizmi)$/.test(token)) return 'we';
+            if (/(asizmi|sizmi)$/.test(token)) return 'you';
+            if (/(adilar(mi)?)$/.test(token)) return 'they';
+            if (/adimi$/.test(token)) return 'he';
+            if (/aydimi$/.test(token)) return 'he';
+            if (/ydimi$/.test(token)) return 'he';
+            if (/ymanmi$/.test(token)) return 'I';
+            if (/ymizmi$/.test(token)) return 'we';
+            if (/ydilarmi$/.test(token)) return 'they';
+            if (/(aman|man)$/.test(token)) return 'I';
+            if (/(asan|san)$/.test(token)) return 'you';
+            if (/(amiz|miz)$/.test(token)) return 'we';
+            if (/(asiz|siz)$/.test(token)) return 'you';
+            if (/(adilar|dilar)$/.test(token)) return 'they';
+            if (/(adi|di)$/.test(token)) return 'he';
+            if (/(aydi|ydi)$/.test(token)) return 'he';
+            if (/yman$/.test(token)) return 'I';
+            if (/ymiz$/.test(token)) return 'we';
+            if (/ydilar$/.test(token)) return 'they';
+            return null;
         };
 
         const detectTimeAdverb = (token) => {
@@ -137,11 +184,20 @@
         let detectedObject = null;
         let detectedPrep = null;
         let detectedTime = null;
+        let isNegative = false;
+        let isQuestion = false;
         let detectedAdjective = null;
 
         tokens.forEach((rawToken, idx) => {
             const key = normalizeLookup(rawToken);
             let matched = null;
+            if (isUzbekNegativeSimple(key)) {
+                isNegative = true;
+            }
+
+            if (isUzbekQuestionSimple(key) || rawToken === 'mi') {
+                isQuestion = true;
+            }
 
             if (rawToken === 'har' && tokens[idx + 1] === 'kuni' && !detectedTime) {
                 detectedTime = 'everyday';
@@ -150,6 +206,11 @@
             const pronoun = detectPronoun(key);
             if (pronoun && !detectedPronoun) {
                 detectedPronoun = pronoun;
+            }
+
+            const inferredPronoun = detectPronounFromVerbToken(key);
+            if (inferredPronoun && !detectedPronoun) {
+                detectedPronoun = inferredPronoun;
             }
 
             const time = detectTimeAdverb(key);
@@ -222,8 +283,26 @@
             return false;
         }
 
-        const verbForm = toSimplePresent(detectedVerb, detectedPronoun);
-        const parts = [detectedPronoun, verbForm];
+        const baseVerb = detectedVerb;
+        const verbForm = isNegative ? baseVerb : toSimplePresent(baseVerb, detectedPronoun);
+        const parts = [];
+
+        if (isQuestion) {
+            const aux = ['he', 'she', 'it'].includes(detectedPronoun) ? 'does' : 'do';
+            parts.push(aux, detectedPronoun);
+            if (isNegative) {
+                parts.push('not');
+            }
+            parts.push(baseVerb);
+        } else {
+            parts.push(detectedPronoun);
+            if (isNegative) {
+                const aux = ['he', 'she', 'it'].includes(detectedPronoun) ? "doesn't" : "don't";
+                parts.push(aux, baseVerb);
+            } else {
+                parts.push(verbForm);
+            }
+        }
 
         if (detectedObject) {
             if (detectedPrep) {
@@ -241,7 +320,10 @@
             parts.push(detectedTime);
         }
 
-        const translatedSentence = parts.join(' ').replace(/\s+/g, ' ').trim();
+        let translatedSentence = parts.join(' ').replace(/\s+/g, ' ').trim();
+        if (isQuestion) {
+            translatedSentence = `${translatedSentence}?`;
+        }
 
         const data = {
             success: true,
@@ -258,12 +340,18 @@
             tense: 'Present Simple'
         };
 
-        if (typeof displaySentenceInSearchModal === 'function') {
-            displaySentenceInSearchModal(data);
+        if (!returnOnly) {
+            if (typeof displaySentenceInSearchModal === 'function') {
+                displaySentenceInSearchModal(data);
+            }
+
+            if (translatedSentence && typeof speakWord === 'function') {
+                speakWord(translatedSentence, 'en');
+            }
         }
 
-        if (translatedSentence && typeof speakWord === 'function') {
-            speakWord(translatedSentence, 'en');
+        if (returnOnly) {
+            return data;
         }
 
         return true;

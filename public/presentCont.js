@@ -5,7 +5,8 @@
             allWordsForSearch = window.allWordsForSearch || [],
             searchLanguage = window.searchLanguage || 'uz-en',
             displaySentenceInSearchModal = window.displaySentenceInSearchModal,
-            speakWord = window.speakWord
+            speakWord = window.speakWord,
+            returnOnly = false
         } = context;
 
         const normalizeLookup = (str) => {
@@ -26,11 +27,11 @@
         };
 
         const isUzbekNegativeQuestion = (token) => {
-            return /(mayapmanmi|mayapsanmi|mayapmizmi|mayapsizmi|mayaptimi|mayapdilarmi)$/.test(token);
+            return /(mayapmanmi|mayapsanmi|mayapmizmi|mayapsizmi|mayaptimi|mayaptilarmi|mayapdilarmi)$/.test(token);
         };
 
         const isUzbekPositiveQuestion = (token) => {
-            return /((yap|ayap)(man|san|miz|siz|ti|dilar)mi|yaptimi|ayaptimi|yammanmi)$/.test(token);
+            return /((yap|ayap)(man|san|miz|siz|ti|dilar)mi|yaptimi|ayaptimi|yapmizmi|ayapmizmi|yaptilarmi|ayaptilarmi|yammanmi)$/.test(token);
         };
 
         const isUzbekQuestion = (token) => {
@@ -39,7 +40,7 @@
 
         const stripUzbekVerbSuffix = (token) => {
             const suffixes = [
-                'mayapmanmi', 'mayapsanmi', 'mayaptimi', 'mayapmizmi', 'mayapsizmi', 'mayapdilarmi',
+                'mayapmanmi', 'mayapsanmi', 'mayaptimi', 'mayapmizmi', 'mayapsizmi', 'mayaptilarmi', 'mayapdilarmi',
                 'mayapman', 'mayapsan', 'mayapmiz', 'mayapsiz', 'mayapti', 'mayapdilar',
                 'ayapmanmi', 'ayapsanmi', 'ayaptimi',
                 'yapmanmi', 'yapsanmi', 'yaptimi',
@@ -87,6 +88,18 @@
         };
 
         const detectPronounFromVerbToken = (token) => {
+            if (/(mayapmanmi|mayapman)$/.test(token)) return 'I';
+            if (/(mayapsanmi|mayapsan)$/.test(token)) return 'you';
+            if (/(mayapmizmi|mayapmiz)$/.test(token)) return 'we';
+            if (/(mayapsizmi|mayapsiz)$/.test(token)) return 'you';
+            if (/(mayaptimi|mayapti)$/.test(token)) return 'he';
+            if (/(mayaptilarmi|mayapdilarmi|mayapdilar)$/.test(token)) return 'they';
+            if (/(yapmanmi|ayapmanmi|yapman|ayapman)$/.test(token)) return 'I';
+            if (/(yapsanmi|ayapsanmi|yapsan|ayapsan)$/.test(token)) return 'you';
+            if (/(yapmizmi|ayapmizmi|yapmiz|ayapmiz)$/.test(token)) return 'we';
+            if (/(yapsizmi|ayapsizmi|yapsiz|ayapsiz)$/.test(token)) return 'you';
+            if (/(yaptimi|ayaptimi|yapti|ayapti)$/.test(token)) return 'he';
+            if (/(yaptilarmi|yapdilarmi|ayaptilarmi|ayapdilarmi|yapdilar|ayapdilar)$/.test(token)) return 'they';
             if (/(yapsiz|ayapsiz|mayapsiz)$/.test(token)) return 'you';
             if (/(yapman|ayapman|mayapman)$/.test(token)) return 'I';
             if (/(yapsan|ayapsan|mayapsan)$/.test(token)) return 'you';
@@ -351,6 +364,10 @@
 
         let translatedSentence = translatedTokens.join(' ').replace(/\s+/g, ' ').trim();
 
+        if (tokens.length === 1 && isQuestion && isNegative) {
+            isNegative = false;
+        }
+
         if (searchLanguage === 'uz-en') {
             if (detectedPronoun && detectedVerb) {
                 let verbForm = detectedVerb;
@@ -436,13 +453,19 @@
             tense: isPresentContinuous ? 'Present Continuous' : 'Present Simple'
         };
 
-        if (typeof displaySentenceInSearchModal === 'function') {
-            displaySentenceInSearchModal(data);
+        if (!returnOnly) {
+            if (typeof displaySentenceInSearchModal === 'function') {
+                displaySentenceInSearchModal(data);
+            }
+
+            if (translatedSentence && typeof speakWord === 'function') {
+                const targetLang = searchLanguage === 'uz-en' ? 'en' : 'uz';
+                speakWord(translatedSentence, targetLang);
+            }
         }
 
-        if (translatedSentence && typeof speakWord === 'function') {
-            const targetLang = searchLanguage === 'uz-en' ? 'en' : 'uz';
-            speakWord(translatedSentence, targetLang);
+        if (returnOnly) {
+            return data;
         }
     }
 

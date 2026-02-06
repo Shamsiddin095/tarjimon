@@ -485,6 +485,15 @@
         "gameMode2": 0,
         "gameMode3": 0
       },
+       {
+        "english": "There",
+        "uzbek": "u yerga",
+        "description": "o'sha joyga",
+        "status": false,
+        "gameMode1": 0,
+        "gameMode2": 0,
+        "gameMode3": 0
+      },
       {
         "english": "tomorrow",
         "uzbek": "ertaga",
@@ -813,5 +822,20 @@
         "gameMode3": 0
       }
     ]
-  }
+  },
+  {
+  "type": "conjunction",
+  "displayName": "🔗 Bog‘lovchilar",
+  "words": [
+    {
+      "english": "while",
+      "uzbek": "shu bilan birga",
+      "description": "ikkita gapni bog‘lash, vaqt yoki qarama-qarshi ishlarni ko‘rsatish uchun ishlatiladi",
+      "status": false,
+      "gameMode1": 0,
+      "gameMode2": 0,
+      "gameMode3": 0
+    }
+  ]
+}
 ]
