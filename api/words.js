@@ -49,7 +49,7 @@ export default async function handler(req, res) {
       
       res.status(201).json(saved);
       typeDoc.updatedAt = new Date();
-      const saved = await typeDoc.save();
+ 
       
       // Stats'ni o'chirib tashlash (yangi so'z qo'shilganda stats 0 bo'lishi kerak)
       await TypeStats.deleteOne({ type });

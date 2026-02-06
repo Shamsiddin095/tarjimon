@@ -209,6 +209,14 @@ function performSearch(query) {
     console.log(`🔍 Search query: "${query}" (normalized: "${normalizedQuery}")`);
     console.log(`📚 Searching in ${allWordsForSearch.length} entries`);
     
+    // YANGI: Agar bir nechta so'z bo'lsa (gap bo'lsa), gap tarjimasini amalga oshirish
+    const wordCount = normalizedQuery.split(/\s+/).length;
+    if (wordCount > 1) {
+        // Gap tarjimasini chaqirish
+        translateSentenceAndDisplay(query);
+        return;
+    }
+    
     // 1. Uzbek gap analyze qilish (Men yugurayapman, Men yugirraman, etc.)
     if (window.analyzeUzbekAndFindConjugation) {
         const analyzed = window.analyzeUzbekAndFindConjugation(query);
@@ -217,7 +225,7 @@ function performSearch(query) {
             
             // Verb base so'zini topish
             const verbWord = allWordsForSearch.find(w => 
-                w.english === analyzed.englishVerb && w.type === 'fellar'
+                w.english === analyzed.englishVerb && w.type === 'verb'
             );
             
             if (verbWord) {
@@ -258,7 +266,7 @@ function performSearch(query) {
             displayType = 'word';
         }
         // Fe'l bo'lsa, conjugation'larni ham generate qilib qidirish
-        else if (word.type === 'fellar' && window.generateVerbConjugation) {
+        else if (word.type === 'verb' && window.generateVerbConjugation) {
             try {
                 const conjugations = window.generateVerbConjugation(word.english, word.uzbek);
                 
@@ -818,7 +826,7 @@ async function loadTypeContent(type, container) {
         const descInput = addWordSection.querySelector('.type-description-input');
         
         // Auto-fill tenses uchun listener (faqat fe'llar uchun)
-        if (type === 'fellar') {
+        if (type === 'verb') {
             const autoFillBtn = document.createElement('button');
             autoFillBtn.textContent = '🪄 Zamonlarni avtomatik to\'ldirish';
             autoFillBtn.style.cssText = 'padding: 8px 12px; background: #f59e0b; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-bottom: 10px;';
@@ -2838,4 +2846,323 @@ function restartGameMode2(event) {
     event.preventDefault();
     location.reload();
 }
+
+// ============== GAP TARJIMA FUNKSIYALARI ==============
+
+// Gap tarjima bo'limini ko'rsatish/yashirish - ENDI KERAK EMAS
+function initSentenceTranslator() {
+    // Bu funksiya endi bo'sh, chunki alohida bo'lim yo'q
+    // Gap tarjimasi search input orqali amalga oshiriladi
+}
+
+// Gap tarjima qilish - ENDI KERAK EMAS (search orqali ishlaydi)
+async function translateSentence() {
+    // Bu funksiya endi ishlatilmaydi
+}
+
+// Natijani ko'rsatish - ENDI KERAK EMAS (search modal ishlatiladi)
+function displaySentenceResult(data) {
+    const resultContainer = document.getElementById('sentence-result-container');
+    const wordsTranslation = document.getElementById('words-translation');
+    const sentenceStructure = document.getElementById('sentence-structure');
+    const englishSentence = document.getElementById('english-sentence');
+    const sentenceTense = document.getElementById('sentence-tense');
+    
+    // So'zlar tarjimasi
+    wordsTranslation.innerHTML = '';
+    data.words.forEach(word => {
+        const wordDiv = document.createElement('div');
+        wordDiv.style.cssText = `
+            padding: 10px;
+            background: ${word.found ? '#e8f5e9' : '#fff3e0'};
+            border-left: 4px solid ${word.found ? '#4caf50' : '#ff9800'};
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        `;
+        
+        const partOfSpeechEmoji = {
+            'pronoun': '👤',
+            'verb': '⚡',
+            'noun': '🗣️',
+            'preposition': '📍',
+            'adverb': '⏰',
+            'adjective': '✨',
+            'article': '📝',
+            'unknown': '❓'
+        };
+        
+        const wordType = word.type || word.part_of_speech || 'unknown';
+
+        wordDiv.innerHTML = `
+            <div>
+                <strong>${word.uzbek}</strong> → <strong style="color: #667eea;">${word.english}</strong>
+            </div>
+            <div style="font-size: 0.85em; color: #666;">
+                ${partOfSpeechEmoji[wordType] || '❓'} ${wordType}
+            </div>
+        `;
+        
+        wordsTranslation.appendChild(wordDiv);
+    });
+    
+    // Grammatik tuzilma
+    sentenceStructure.innerHTML = '';
+    const structureOrder = ['subject', 'verb', 'preposition', 'noun', 'adjective', 'adverb'];
+    const structureNames = {
+        'subject': '👤 Subject (Ega)',
+        'verb': '⚡ Verb (Fe\'l)',
+        'preposition': '📍 Preposition (Predlog)',
+        'noun': '🗣️ Noun (Ot)',
+        'adjective': '✨ Adjective (Sifat)',
+        'adverb': '⏰ Adverb (Ravish)'
+    };
+    
+    structureOrder.forEach(key => {
+        if (data.structure[key] && data.structure[key].length > 0) {
+            const structDiv = document.createElement('div');
+            structDiv.style.cssText = `
+                padding: 10px;
+                background: #f5f5f5;
+                border-radius: 4px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            `;
+            
+            structDiv.innerHTML = `
+                <div style="font-weight: 600; color: #667eea;">${structureNames[key]}</div>
+                <div style="font-weight: bold;">${data.structure[key].join(', ')}</div>
+            `;
+            
+            sentenceStructure.appendChild(structDiv);
+        }
+    });
+    
+    // Ingliz tilida gap
+    englishSentence.textContent = data.english;
+    sentenceTense.textContent = data.tense;
+    
+    // Natijani ko'rsatish
+    resultContainer.style.display = 'block';
+    
+    // Scroll qilish
+    setTimeout(() => {
+        resultContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+}
+
+// Gap tarjimasini search modal orqali ko'rsatish
+async function translateSentenceAndDisplay(sentence) {
+    const normalizeLookup = (str) => {
+        if (!str) return '';
+        return str
+            .toLowerCase()
+            .replace(/\s*\(.*?\)\s*/g, '')
+            .replace(/[^\p{L}\p{M}'’ʼ-]+/gu, '')
+            .trim();
+    };
+
+    const tokens = sentence
+        .toLowerCase()
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean);
+
+    const uzbekMap = new Map();
+    const englishMap = new Map();
+
+    allWordsForSearch.forEach(word => {
+        const uzKey = normalizeLookup(word.uzbek);
+        const enKey = normalizeLookup(word.english);
+
+        if (uzKey && !uzbekMap.has(uzKey)) uzbekMap.set(uzKey, word);
+        if (enKey && !englishMap.has(enKey)) englishMap.set(enKey, word);
+    });
+
+    const translatedTokens = [];
+    const words = [];
+
+    tokens.forEach(rawToken => {
+        const key = normalizeLookup(rawToken);
+        let matched = null;
+
+        if (searchLanguage === 'uz-en') {
+            matched = uzbekMap.get(key);
+        } else {
+            matched = englishMap.get(key);
+        }
+
+        if (matched) {
+            const translated = searchLanguage === 'uz-en' ? matched.english : matched.uzbek;
+            translatedTokens.push(translated);
+            words.push({
+                english: matched.english,
+                uzbek: matched.uzbek,
+                type: matched.type || 'unknown',
+                found: true
+            });
+        } else {
+            translatedTokens.push(rawToken);
+            words.push({
+                english: searchLanguage === 'uz-en' ? rawToken : rawToken,
+                uzbek: searchLanguage === 'uz-en' ? rawToken : rawToken,
+                type: 'unknown',
+                found: false
+            });
+        }
+    });
+
+    const translatedSentence = translatedTokens.join(' ').replace(/\s+/g, ' ').trim();
+
+    const data = {
+        success: true,
+        words,
+        structure: {
+            subject: [],
+            verb: [],
+            preposition: [],
+            noun: [],
+            adjective: [],
+            adverb: []
+        },
+        english: translatedSentence,
+        tense: 'So\'zma-so\'z tarjima'
+    };
+
+    displaySentenceInSearchModal(data);
+
+    if (translatedSentence) {
+        const targetLang = searchLanguage === 'uz-en' ? 'en' : 'uz';
+        speakWord(translatedSentence, targetLang);
+    }
+}
+
+// Gap tarjimasini search results modalda ko'rsatish
+function displaySentenceInSearchModal(data) {
+    const resultsTitle = document.getElementById('search-results-title');
+    const resultsContainer = document.getElementById('search-results-container');
+    const overlay = document.getElementById('search-results-overlay');
+    const modal = document.getElementById('search-results-modal');
+    
+    resultsTitle.textContent = '🔤 Gap Tarjimasi';
+    
+    const partOfSpeechEmoji = {
+        'pronoun': '👤',
+        'verb': '⚡',
+        'noun': '🗣️',
+        'preposition': '📍',
+        'adverb': '⏰',
+        'adjective': '✨',
+        'article': '📝',
+        'interrogative': '❓',
+        'unknown': '❓'
+    };
+    
+    let html = `
+        <!-- So'zlar tarjimasi -->
+        <div style="margin-bottom: 15px;">
+            <h3 style="margin: 0 0 10px 0; color: #667eea; font-size: 1em;">📋 So'zlar Tarjimasi</h3>
+            <div style="display: grid; gap: 8px;">
+    `;
+    
+    data.words.forEach(word => {
+        const wordType = word.type || word.part_of_speech || 'unknown';
+
+        html += `
+            <div style="
+                padding: 8px 10px;
+                background: ${word.found ? '#e8f5e9' : '#fff3e0'};
+                border-left: 3px solid ${word.found ? '#4caf50' : '#ff9800'};
+                border-radius: 4px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                font-size: 0.9em;
+            ">
+                <div>
+                    <strong>${word.uzbek}</strong> → <strong style="color: #667eea;">${word.english}</strong>
+                </div>
+                <div style="font-size: 0.85em; color: #666;">
+                    ${partOfSpeechEmoji[wordType] || '❓'} ${wordType}
+                </div>
+            </div>
+        `;
+    });
+    
+    html += `
+            </div>
+        </div>
+        
+        <!-- Grammatik tuzilma -->
+        <div style="margin-bottom: 15px;">
+            <h3 style="margin: 0 0 10px 0; color: #667eea; font-size: 1em;">🏗️ Grammatik Tuzilma</h3>
+            <div style="display: grid; gap: 6px;">
+    `;
+    
+    const structureOrder = ['subject', 'verb', 'preposition', 'noun', 'adjective', 'adverb'];
+    const structureNames = {
+        'subject': '👤 Subject',
+        'verb': '⚡ Verb',
+        'preposition': '📍 Preposition',
+        'noun': '🗣️ Noun',
+        'adjective': '✨ Adjective',
+        'adverb': '⏰ Adverb'
+    };
+    
+    structureOrder.forEach(key => {
+        if (data.structure[key] && data.structure[key].length > 0) {
+            html += `
+                <div style="
+                    padding: 8px 10px;
+                    background: #f5f5f5;
+                    border-radius: 4px;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    font-size: 0.9em;
+                ">
+                    <div style="font-weight: 600; color: #667eea;">${structureNames[key]}</div>
+                    <div style="font-weight: bold;">${data.structure[key].join(', ')}</div>
+                </div>
+            `;
+        }
+    });
+    
+    html += `
+            </div>
+        </div>
+        
+        <!-- Ingliz tilida gap -->
+        <div style="
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            text-align: center;
+        ">
+            <h3 style="margin: 0 0 10px 0; font-size: 0.95em;">🎯 Natija</h3>
+            <div style="font-size: 1.2em; font-weight: bold; margin-bottom: 10px;">${data.english}</div>
+            <div style="display: inline-block; padding: 5px 12px; background: rgba(255, 255, 255, 0.2); border-radius: 20px; font-size: 0.85em; font-weight: bold;">
+                ${data.tense}
+            </div>
+        </div>
+    `;
+    
+    resultsContainer.innerHTML = html;
+    
+    // Modallarni ko'rsatish
+    overlay.style.display = 'block';
+    modal.style.display = 'block';
+}
+
+// Sahifa yuklanganida funksiyani ishga tushirish
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initSentenceTranslator);
+} else {
+    initSentenceTranslator();
+}
+
 

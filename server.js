@@ -4,44 +4,11 @@ import mongoose from 'mongoose';
 import path from 'path';
 import cors from 'cors';
 import { fileURLToPath } from 'url';
-import multer from 'multer';
-import fs from 'fs';
+
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app = express();
-
-// Multer configuration - audio upload uchun
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const stage = req.query.stage || 'listening';
-    const uploadDir = path.join(__dirname, 'public', 'tracks', stage);
-    
-    // Papka mavjud bo'lsa xo'zlash
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const timestamp = Date.now();
-    const originalName = file.originalname.replace(/\s+/g, '_');
-    cb(null, `${timestamp}_${originalName}`);
-  }
-});
-
-const upload = multer({
-  storage,
-  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('audio/')) {
-      cb(null, true);
-    } else {
-      cb(new Error('Only audio files allowed'));
-    }
-  }
-});
 const PORT = process.env.PORT || 3000;
 
 // Middleware
@@ -76,7 +43,7 @@ const typeSchema = new mongoose.Schema({
   updatedAt: { type: Date, default: Date.now }
 });
 
-const Type = mongoose.model('Type', typeSchema);
+const Type = mongoose.models.Type || mongoose.model('Type', typeSchema);
 
 // TypeStats Schema - Type bo'yicha statistika
 const typeStatsSchema = new mongoose.Schema({
@@ -88,21 +55,8 @@ const typeStatsSchema = new mongoose.Schema({
   lastUpdated: { type: Date, default: Date.now }
 });
 
-const TypeStats = mongoose.model('TypeStats', typeStatsSchema);
+const TypeStats = mongoose.models.TypeStats || mongoose.model('TypeStats', typeStatsSchema);
 
-// Predefined vocabulary types
-const VOCABULARY_TYPES = [
-  { type: 'mevalar', displayName: '🍎 Mevalar' },
-  { type: 'jihozlar', displayName: '🔧 Jihozlar' },
-  { type: 'kasblar', displayName: '👨‍💼 Kasblar' },
-  { type: 'hayvonlar', displayName: '🐾 Hayvonlar' },
-  { type: 'raqamlar', displayName: '🔢 Raqamlar' },
-  { type: 'rangli', displayName: '🌈 Ranglar' },
-  { type: 'oilam', displayName: '👨‍👩‍👧‍👦 O\'ila Azo\'lari' },
-  { type: 'jismiy', displayName: '🏃 Jismiy Mashqlar' },
-  { type: 'taom', displayName: '🍽️ Taomlar' },
-  { type: 'uy', displayName: '🏠 Uy Narsalari' }
-];
 
 // API Routes (STATIC dan OLDIN!)
 // Types listini olish - MongoDB'dan
@@ -497,8 +451,7 @@ app.put('/api/word-action', async (req, res) => {
   }
 });
 
-// ==========================================
-// STATIC FILES
+
 // ==========================================
 
 // Static fayllar

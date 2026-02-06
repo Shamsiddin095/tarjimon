@@ -1,15 +1,12 @@
 [
   {
-    "type": "otlar",
+    "type": "noun",
     "displayName": "🗣️ Otlar",
-    "part_of_speech": "noun",
     "words": [
       
       {
         "english": "apple",
         "uzbek": "olma",
-        "part_of_speech": "noun",
-        "subcategory": "Mevalar",
         "description": "qizil yoki yashil mevalar",
         "status": false,
         "gameMode1": 0,
@@ -19,8 +16,6 @@
       {
         "english": "banana",
         "uzbek": "banan",
-        "part_of_speech": "noun",
-        "subcategory": "Mevalar",
         "description": "sariq meva",
         "status": false,
         "gameMode1": 0,
@@ -31,14 +26,12 @@
     ]
   },
   {
-    "type": "sonlar",
+    "type": "numeral",
     "displayName": "🔢 Sonlar",
-    "part_of_speech": "numeral",
     "words": [
       {
         "english": "one",
         "uzbek": "bir",
-        "part_of_speech": "numeral",
         "description": "birinchi raqam",
         "status": false,
         "gameMode1": 0,
@@ -48,7 +41,6 @@
       {
         "english": "two",
         "uzbek": "ikki",
-        "part_of_speech": "numeral",
         "description": "ikkinchi raqam",
         "status": false,
         "gameMode1": 0,
@@ -58,15 +50,12 @@
     ]
   },
   {
-    "type": "sifatlar",
+    "type": "adjective",
     "displayName": "✨ Sifatlar",
-    "part_of_speech": "adjective",
     "words": [
       {
         "english": "beautiful",
         "uzbek": "chiroyli",
-        "part_of_speech": "adjective",
-        "subcategory": "Umumiy",
         "description": "juda yoqimli",
         "status": false,
         "gameMode1": 0,
@@ -76,8 +65,6 @@
       {
         "english": "happy",
         "uzbek": "baxtli",
-        "part_of_speech": "adjective",
-        "subcategory": "Umumiy",
         "description": "xushbatli hol",
         "status": false,
         "gameMode1": 0,
@@ -88,15 +75,12 @@
     ]
   },
   {
-    "type": "fellar",
+    "type": "verb",
     "displayName": "⚡ Fe'llar",
-    "part_of_speech": "verb",
     "words": [
       {
         "english": "go",
         "uzbek": "bor",
-        "part_of_speech": "verb",
-        "subcategory": "Harakatlar",
         "description": "bir joydan boshqa joyga harakat qilish",
         "is_irregular": true,
         "verb_forms": {
@@ -113,8 +97,6 @@
       {
         "english": "run",
         "uzbek": "yugur",
-        "part_of_speech": "verb",
-        "subcategory": "Jismiy Harakatlar",
         "description": "tez yurish",
         "is_irregular": true,
         "verb_forms": {
@@ -133,16 +115,13 @@
   },
  
   {
-    "type": "egalar",
+    "type": "pronoun",
     "displayName": "👤 Egalar",
-    "part_of_speech": "pronoun",
     "words": [
       {
         "english": "I",
         "uzbek": "men",
-        "part_of_speech": "pronoun",
         "grammatical_role": "subject",
-        "subcategory": "Shaxsiy Egalar",
         "description": "birinchi shaxs yakka",
         "status": false,
         "gameMode1": 0,
@@ -152,9 +131,7 @@
       {
         "english": "you",
         "uzbek": "siz",
-        "part_of_speech": "pronoun",
         "grammatical_role": "subject",
-        "subcategory": "Shaxsiy Egalar",
         "description": "ikkinchi shaxs",
         "status": false,
         "gameMode1": 0,
@@ -164,9 +141,7 @@
       {
         "english": "he",
         "uzbek": "u (erkak)",
-        "part_of_speech": "pronoun",
         "grammatical_role": "subject",
-        "subcategory": "Shaxsiy Egalar",
         "description": "uchinchi shaxs erkak",
         "status": false,
         "gameMode1": 0,
@@ -176,9 +151,7 @@
       {
         "english": "she",
         "uzbek": "u",
-        "part_of_speech": "pronoun",
         "grammatical_role": "subject",
-        "subcategory": "Shaxsiy Egalar",
         "description": "uchinchi shaxs ayol",
         "status": false,
         "gameMode1": 0,
@@ -188,9 +161,7 @@
       {
         "english": "it",
         "uzbek": "u",
-        "part_of_speech": "pronoun",
         "grammatical_role": "subject",
-        "subcategory": "Shaxsiy Egalar",
         "description": "uchinchi shaxs narsa",
         "status": false,
         "gameMode1": 0,
@@ -200,9 +171,7 @@
       {
         "english": "we",
         "uzbek": "biz",
-        "part_of_speech": "pronoun",
         "grammatical_role": "subject",
-        "subcategory": "Shaxsiy Egalar",
         "description": "birinchi shaxs ko'plik",
         "status": false,
         "gameMode1": 0,
@@ -212,9 +181,7 @@
       {
         "english": "they",
         "uzbek": "ular",
-        "part_of_speech": "pronoun",
         "grammatical_role": "subject",
-        "subcategory": "Shaxsiy Egalar",
         "description": "uchinchi shaxs ko'plik",
         "status": false,
         "gameMode1": 0,
@@ -224,9 +191,7 @@
       {
         "english": "me",
         "uzbek": "meni",
-        "part_of_speech": "pronoun",
         "grammatical_role": "object",
-        "subcategory": "Ob'ektiv Egalar",
         "description": "birinchi shaxs ob'ekt",
         "status": false,
         "gameMode1": 0,
@@ -236,9 +201,7 @@
       {
         "english": "him",
         "uzbek": "uni (erkak)",
-        "part_of_speech": "pronoun",
         "grammatical_role": "object",
-        "subcategory": "Ob'ektiv Egalar",
         "description": "uchinchi shaxs erkak ob'ekt",
         "status": false,
         "gameMode1": 0,
@@ -248,9 +211,7 @@
       {
         "english": "her",
         "uzbek": "uni",
-        "part_of_speech": "pronoun",
         "grammatical_role": "object",
-        "subcategory": "Ob'ektiv Egalar",
         "description": "uchinchi shaxs ayol ob'ekt",
         "status": false,
         "gameMode1": 0,
@@ -260,9 +221,7 @@
       {
         "english": "us",
         "uzbek": "bizni",
-        "part_of_speech": "pronoun",
         "grammatical_role": "object",
-        "subcategory": "Ob'ektiv Egalar",
         "description": "birinchi shaxs ko'plik ob'ekt",
         "status": false,
         "gameMode1": 0,
@@ -272,10 +231,509 @@
       {
         "english": "them",
         "uzbek": "ularni",
-        "part_of_speech": "pronoun",
         "grammatical_role": "object",
-        "subcategory": "Ob'ektiv Egalar",
         "description": "uchinchi shaxs ko'plik ob'ekt",
+        "status": false,
+        "gameMode1": 0,
+        "gameMode2": 0,
+        "gameMode3": 0
+      }
+    ]
+  },
+  {
+    "type": "preposition",
+    "displayName": "📍 Predloglar",
+    "words": [
+      {
+        "english": "in",
+        "uzbek": "ichida",
+        "description": "biror joy ichida",
+        "status": false,
+        "gameMode1": 0,
+        "gameMode2": 0,
+        "gameMode3": 0
+      },
+      {
+        "english": "on",
+        "uzbek": "ustida",
+        "description": "biror narsa ustida",
+        "status": false,
+        "gameMode1": 0,
+        "gameMode2": 0,
+        "gameMode3": 0
+      },
+      {
+        "english": "at",
+        "uzbek": "da/-da",
+        "description": "aniq joyda",
+        "status": false,
+        "gameMode1": 0,
+        "gameMode2": 0,
+        "gameMode3": 0
+      },
+      {
+        "english": "to",
+        "uzbek": "ga/-ga",
+        "description": "biror tomonga",
+        "status": false,
+        "gameMode1": 0,
+        "gameMode2": 0,
+        "gameMode3": 0
+      },
+      {
+        "english": "from",
+        "uzbek": "dan/-dan",
+        "description": "biror joydan",
+        "status": false,
+        "gameMode1": 0,
+        "gameMode2": 0,
+        "gameMode3": 0
+      },
+      {
+        "english": "up",
+        "uzbek": "yuqoriga",
+        "description": "tepaga",
+        "status": false,
+        "gameMode1": 0,
+        "gameMode2": 0,
+        "gameMode3": 0
+      },
+      {
+        "english": "down",
+        "uzbek": "pastga",
+        "description": "quyiga",
+        "status": false,
+        "gameMode1": 0,
+        "gameMode2": 0,
+        "gameMode3": 0
+      },
+      {
+        "english": "with",
+        "uzbek": "bilan",
+        "description": "birga",
+        "status": false,
+        "gameMode1": 0,
+        "gameMode2": 0,
+        "gameMode3": 0
+      },
+      {
+        "english": "for",
+        "uzbek": "uchun",
+        "description": "uchun",
+        "status": false,
+        "gameMode1": 0,
+        "gameMode2": 0,
+        "gameMode3": 0
+      },
+      {
+        "english": "by",
+        "uzbek": "orqali",
+        "description": "orqali, yonida",
+        "status": false,
+        "gameMode1": 0,
+        "gameMode2": 0,
+        "gameMode3": 0
+      },
+      {
+        "english": "about",
+        "uzbek": "haqida",
+        "description": "haqida",
+        "status": false,
+        "gameMode1": 0,
+        "gameMode2": 0,
+        "gameMode3": 0
+      },
+      {
+        "english": "over",
+        "uzbek": "ustidan",
+        "description": "ustidan o'tib",
+        "status": false,
+        "gameMode1": 0,
+        "gameMode2": 0,
+        "gameMode3": 0
+      },
+      {
+        "english": "under",
+        "uzbek": "ostida",
+        "description": "ostida",
+        "status": false,
+        "gameMode1": 0,
+        "gameMode2": 0,
+        "gameMode3": 0
+      },
+      {
+        "english": "between",
+        "uzbek": "orasida",
+        "description": "ikki narsa orasida",
+        "status": false,
+        "gameMode1": 0,
+        "gameMode2": 0,
+        "gameMode3": 0
+      },
+      {
+        "english": "after",
+        "uzbek": "keyin",
+        "description": "biror narsadan keyin",
+        "status": false,
+        "gameMode1": 0,
+        "gameMode2": 0,
+        "gameMode3": 0
+      },
+      {
+        "english": "before",
+        "uzbek": "oldin",
+        "description": "biror narsadan oldin",
+        "status": false,
+        "gameMode1": 0,
+        "gameMode2": 0,
+        "gameMode3": 0
+      }
+    ]
+  },
+  {
+    "type": "adverb",
+    "displayName": "⏰ Payt Ravishlar",
+    "words": [
+      {
+        "english": "today",
+        "uzbek": "bugun",
+        "description": "hozirgi kun",
+        "status": false,
+        "gameMode1": 0,
+        "gameMode2": 0,
+        "gameMode3": 0
+      },
+      {
+        "english": "yesterday",
+        "uzbek": "kecha",
+        "description": "o'tgan kun",
+        "status": false,
+        "gameMode1": 0,
+        "gameMode2": 0,
+        "gameMode3": 0
+      },
+      {
+        "english": "tomorrow",
+        "uzbek": "ertaga",
+        "description": "keyingi kun",
+        "status": false,
+        "gameMode1": 0,
+        "gameMode2": 0,
+        "gameMode3": 0
+      },
+      {
+        "english": "now",
+        "uzbek": "hozir",
+        "description": "ayni vaqtda",
+        "status": false,
+        "gameMode1": 0,
+        "gameMode2": 0,
+        "gameMode3": 0
+      },
+      {
+        "english": "later",
+        "uzbek": "keyinroq",
+        "description": "biroz keyin",
+        "status": false,
+        "gameMode1": 0,
+        "gameMode2": 0,
+        "gameMode3": 0
+      },
+      {
+        "english": "soon",
+        "uzbek": "tez orada",
+        "description": "yaqin kelajakda",
+        "status": false,
+        "gameMode1": 0,
+        "gameMode2": 0,
+        "gameMode3": 0
+      },
+      {
+        "english": "always",
+        "uzbek": "doim",
+        "description": "har doim",
+        "status": false,
+        "gameMode1": 0,
+        "gameMode2": 0,
+        "gameMode3": 0
+      },
+      {
+        "english": "everyday",
+        "uzbek": "har kuni",
+        "description": "kundalik",
+        "status": false,
+        "gameMode1": 0,
+        "gameMode2": 0,
+        "gameMode3": 0
+      },
+      {
+        "english": "daily",
+        "uzbek": "kunlik",
+        "description": "har kuni",
+        "status": false,
+        "gameMode1": 0,
+        "gameMode2": 0,
+        "gameMode3": 0
+      },
+      {
+        "english": "constantly",
+        "uzbek": "doimo",
+        "description": "doimiy ravishda",
+        "status": false,
+        "gameMode1": 0,
+        "gameMode2": 0,
+        "gameMode3": 0
+      },
+      {
+        "english": "every time",
+        "uzbek": "har safar",
+        "description": "har gal",
+        "status": false,
+        "gameMode1": 0,
+        "gameMode2": 0,
+        "gameMode3": 0
+      },
+      {
+        "english": "forever",
+        "uzbek": "abadiy",
+        "description": "doim-doim",
+        "status": false,
+        "gameMode1": 0,
+        "gameMode2": 0,
+        "gameMode3": 0
+      },
+      {
+        "english": "never",
+        "uzbek": "hech qachon",
+        "description": "bir ham yo'q",
+        "status": false,
+        "gameMode1": 0,
+        "gameMode2": 0,
+        "gameMode3": 0
+      },
+      {
+        "english": "sometimes",
+        "uzbek": "ba'zida",
+        "description": "gohida",
+        "status": false,
+        "gameMode1": 0,
+        "gameMode2": 0,
+        "gameMode3": 0
+      },
+      {
+        "english": "often",
+        "uzbek": "tez-tez",
+        "description": "ko'p marta",
+        "status": false,
+        "gameMode1": 0,
+        "gameMode2": 0,
+        "gameMode3": 0
+      },
+      {
+        "english": "usually",
+        "uzbek": "odatda",
+        "description": "ko'pincha",
+        "status": false,
+        "gameMode1": 0,
+        "gameMode2": 0,
+        "gameMode3": 0
+      },
+      {
+        "english": "already",
+        "uzbek": "allaqachon",
+        "description": "allaqachon bo'lgan",
+        "status": false,
+        "gameMode1": 0,
+        "gameMode2": 0,
+        "gameMode3": 0
+      },
+      {
+        "english": "yet",
+        "uzbek": "hali",
+        "description": "hali bo'lmagan",
+        "status": false,
+        "gameMode1": 0,
+        "gameMode2": 0,
+        "gameMode3": 0
+      },
+      {
+        "english": "still",
+        "uzbek": "hali ham",
+        "description": "davom etayotgan",
+        "status": false,
+        "gameMode1": 0,
+        "gameMode2": 0,
+        "gameMode3": 0
+      },
+      {
+        "english": "recently",
+        "uzbek": "yaqinda",
+        "description": "o'tgan kunlarda",
+        "status": false,
+        "gameMode1": 0,
+        "gameMode2": 0,
+        "gameMode3": 0
+      },
+      {
+        "english": "ago",
+        "uzbek": "oldin",
+        "description": "o'tmishda",
+        "status": false,
+        "gameMode1": 0,
+        "gameMode2": 0,
+        "gameMode3": 0
+      }
+    ]
+  },
+  {
+    "type": "interrogative",
+    "displayName": "❓ So'roq So'zlari",
+    "words": [
+      {
+        "english": "what",
+        "uzbek": "nima",
+        "description": "narsa, holat haqida",
+        "status": false,
+        "gameMode1": 0,
+        "gameMode2": 0,
+        "gameMode3": 0
+      },
+      {
+        "english": "who",
+        "uzbek": "kim",
+        "description": "shaxs haqida",
+        "status": false,
+        "gameMode1": 0,
+        "gameMode2": 0,
+        "gameMode3": 0
+      },
+      {
+        "english": "where",
+        "uzbek": "qayer",
+        "description": "joy haqida",
+        "status": false,
+        "gameMode1": 0,
+        "gameMode2": 0,
+        "gameMode3": 0
+      },
+      {
+        "english": "when",
+        "uzbek": "qachon",
+        "description": "vaqt haqida",
+        "status": false,
+        "gameMode1": 0,
+        "gameMode2": 0,
+        "gameMode3": 0
+      },
+      {
+        "english": "why",
+        "uzbek": "nega",
+        "description": "sabab haqida",
+        "status": false,
+        "gameMode1": 0,
+        "gameMode2": 0,
+        "gameMode3": 0
+      },
+      {
+        "english": "how",
+        "uzbek": "qanday",
+        "description": "usul haqida",
+        "status": false,
+        "gameMode1": 0,
+        "gameMode2": 0,
+        "gameMode3": 0
+      },
+      {
+        "english": "which",
+        "uzbek": "qaysi",
+        "description": "tanlov haqida",
+        "status": false,
+        "gameMode1": 0,
+        "gameMode2": 0,
+        "gameMode3": 0
+      },
+      {
+        "english": "whose",
+        "uzbek": "kimniki",
+        "description": "egalik haqida",
+        "status": false,
+        "gameMode1": 0,
+        "gameMode2": 0,
+        "gameMode3": 0
+      },
+      {
+        "english": "how many",
+        "uzbek": "qancha (son)",
+        "description": "sanaluvchi miqdor",
+        "status": false,
+        "gameMode1": 0,
+        "gameMode2": 0,
+        "gameMode3": 0
+      },
+      {
+        "english": "how much",
+        "uzbek": "qancha (hajm)",
+        "description": "sanalmaydigan miqdor",
+        "status": false,
+        "gameMode1": 0,
+        "gameMode2": 0,
+        "gameMode3": 0
+      },
+      {
+        "english": "how long",
+        "uzbek": "qancha vaqt",
+        "description": "davomiylik haqida",
+        "status": false,
+        "gameMode1": 0,
+        "gameMode2": 0,
+        "gameMode3": 0
+      },
+      {
+        "english": "how far",
+        "uzbek": "qancha uzoq",
+        "description": "masofa haqida",
+        "status": false,
+        "gameMode1": 0,
+        "gameMode2": 0,
+        "gameMode3": 0
+      },
+      {
+        "english": "how often",
+        "uzbek": "qancha tez-tez",
+        "description": "chastota haqida",
+        "status": false,
+        "gameMode1": 0,
+        "gameMode2": 0,
+        "gameMode3": 0
+      }
+    ]
+  },
+  {
+    "type": "article",
+    "displayName": "📝 Artikl",
+    "words": [
+      {
+        "english": "a",
+        "uzbek": "bir",
+        "description": "unli tovushdan oldin ishlatilmaydi",
+        "status": false,
+        "gameMode1": 0,
+        "gameMode2": 0,
+        "gameMode3": 0
+      },
+      {
+        "english": "an",
+        "uzbek": "bir",
+        "description": "unli tovushdan oldin ishlatiladi",
+        "status": false,
+        "gameMode1": 0,
+        "gameMode2": 0,
+        "gameMode3": 0
+      },
+      {
+        "english": "the",
+        "uzbek": "-",
+        "description": "ma'lum narsa yoki shaxsni bildiradi",
         "status": false,
         "gameMode1": 0,
         "gameMode2": 0,
