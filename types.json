@@ -21,6 +21,15 @@
         "gameMode1": 0,
         "gameMode2": 0,
         "gameMode3": 0
+      },
+       {
+        "english": "school",
+        "uzbek": "maktab",
+        "description": "o'quv muassasasi",
+        "status": false,
+        "gameMode1": 0,
+        "gameMode2": 0,
+        "gameMode3": 0
       }
      
     ]
@@ -104,6 +113,70 @@
           "past": "ran",
           "past_participle": "run",
           "present_participle": "running"
+        },
+        "status": false,
+        "gameMode1": 0,
+        "gameMode2": 0,
+        "gameMode3": 0
+      },
+      {
+        "english": "work",
+        "uzbek": "ishla",
+        "description": "mehnat qilish",
+        "is_irregular": false,
+        "verb_forms": {
+          "base": "work",
+          "past": "worked",
+          "past_participle": "worked",
+          "present_participle": "working"
+        },
+        "status": false,
+        "gameMode1": 0,
+        "gameMode2": 0,
+        "gameMode3": 0
+      },
+       {
+        "english": "do",
+        "uzbek": "qil",
+        "description": "amal bajarish",
+        "is_irregular": false,
+        "verb_forms": {
+          "base": "do",
+          "past": "did",
+          "past_participle": "done",
+          "present_participle": "doing"
+        },
+        "status": false,
+        "gameMode1": 0,
+        "gameMode2": 0,
+        "gameMode3": 0
+      },
+      {
+        "english": "grow",
+        "uzbek": "o's",
+        "description": "o'sish yoki rivojlanish",
+        "is_irregular": false,
+        "verb_forms": {
+          "base": "grow",
+          "past": "grew",
+          "past_participle": "grown",
+          "present_participle": "growing"
+        },
+        "status": false,
+        "gameMode1": 0,
+        "gameMode2": 0,
+        "gameMode3": 0
+      },
+         {
+        "english": "come",
+        "uzbek": "kel",
+        "description": "bir joydan boshqa joyga harakat qilish",
+        "is_irregular": true,
+        "verb_forms": {
+          "base": "come",
+          "past": "came",
+          "past_participle": "come",
+          "present_participle": "coming"
         },
         "status": false,
         "gameMode1": 0,

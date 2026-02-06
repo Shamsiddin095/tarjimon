@@ -211,9 +211,26 @@ function performSearch(query) {
     
     // YANGI: Agar bir nechta so'z bo'lsa (gap bo'lsa), gap tarjimasini amalga oshirish
     const wordCount = normalizedQuery.split(/\s+/).length;
-    if (wordCount > 1) {
+    const isUzbekMorphWord = /((yap|ayap|mayap)(man|san|miz|siz|ti|dilar)(mi)?)$/.test(normalizedQuery) || /((a|i)?man|asan|adi|amiz|asiz|adilar)$/.test(normalizedQuery) || /(ga|ka|qa|ke|da|ta|dan|tan)$/.test(normalizedQuery);
+    if (wordCount > 1 || (searchLanguage === 'uz-en' && isUzbekMorphWord)) {
         // Gap tarjimasini chaqirish
-        translateSentenceAndDisplay(query);
+        let handled = false;
+        if (typeof window.translatePresentSimple === 'function') {
+            handled = window.translatePresentSimple(query, {
+                allWordsForSearch,
+                searchLanguage,
+                displaySentenceInSearchModal,
+                speakWord
+            });
+        }
+        if (!handled && typeof window.translateSentenceAndDisplay === 'function') {
+            window.translateSentenceAndDisplay(query, {
+                allWordsForSearch,
+                searchLanguage,
+                displaySentenceInSearchModal,
+                speakWord
+            });
+        }
         return;
     }
     
@@ -2953,92 +2970,6 @@ function displaySentenceResult(data) {
     }, 100);
 }
 
-// Gap tarjimasini search modal orqali ko'rsatish
-async function translateSentenceAndDisplay(sentence) {
-    const normalizeLookup = (str) => {
-        if (!str) return '';
-        return str
-            .toLowerCase()
-            .replace(/\s*\(.*?\)\s*/g, '')
-            .replace(/[^\p{L}\p{M}'’ʼ-]+/gu, '')
-            .trim();
-    };
-
-    const tokens = sentence
-        .toLowerCase()
-        .trim()
-        .split(/\s+/)
-        .filter(Boolean);
-
-    const uzbekMap = new Map();
-    const englishMap = new Map();
-
-    allWordsForSearch.forEach(word => {
-        const uzKey = normalizeLookup(word.uzbek);
-        const enKey = normalizeLookup(word.english);
-
-        if (uzKey && !uzbekMap.has(uzKey)) uzbekMap.set(uzKey, word);
-        if (enKey && !englishMap.has(enKey)) englishMap.set(enKey, word);
-    });
-
-    const translatedTokens = [];
-    const words = [];
-
-    tokens.forEach(rawToken => {
-        const key = normalizeLookup(rawToken);
-        let matched = null;
-
-        if (searchLanguage === 'uz-en') {
-            matched = uzbekMap.get(key);
-        } else {
-            matched = englishMap.get(key);
-        }
-
-        if (matched) {
-            const translated = searchLanguage === 'uz-en' ? matched.english : matched.uzbek;
-            translatedTokens.push(translated);
-            words.push({
-                english: matched.english,
-                uzbek: matched.uzbek,
-                type: matched.type || 'unknown',
-                found: true
-            });
-        } else {
-            translatedTokens.push(rawToken);
-            words.push({
-                english: searchLanguage === 'uz-en' ? rawToken : rawToken,
-                uzbek: searchLanguage === 'uz-en' ? rawToken : rawToken,
-                type: 'unknown',
-                found: false
-            });
-        }
-    });
-
-    const translatedSentence = translatedTokens.join(' ').replace(/\s+/g, ' ').trim();
-
-    const data = {
-        success: true,
-        words,
-        structure: {
-            subject: [],
-            verb: [],
-            preposition: [],
-            noun: [],
-            adjective: [],
-            adverb: []
-        },
-        english: translatedSentence,
-        tense: 'So\'zma-so\'z tarjima'
-    };
-
-    displaySentenceInSearchModal(data);
-
-    if (translatedSentence) {
-        const targetLang = searchLanguage === 'uz-en' ? 'en' : 'uz';
-        speakWord(translatedSentence, targetLang);
-    }
-}
-
 // Gap tarjimasini search results modalda ko'rsatish
 function displaySentenceInSearchModal(data) {
     const resultsTitle = document.getElementById('search-results-title');
@@ -3144,7 +3075,27 @@ function displaySentenceInSearchModal(data) {
             text-align: center;
         ">
             <h3 style="margin: 0 0 10px 0; font-size: 0.95em;">🎯 Natija</h3>
-            <div style="font-size: 1.2em; font-weight: bold; margin-bottom: 10px;">${data.english}</div>
+            <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px;">
+                <div style="font-size: 1.2em; font-weight: bold;">${data.english}</div>
+                <button
+                    onclick="speakWord('${data.english.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}', 'en')"
+                    style="
+                        padding: 6px 8px;
+                        background: rgba(255, 255, 255, 0.25);
+                        color: white;
+                        border: 1px solid rgba(255, 255, 255, 0.5);
+                        border-radius: 6px;
+                        cursor: pointer;
+                        font-size: 14px;
+                        transition: all 0.2s;
+                    "
+                    onmouseover="this.style.background='rgba(255, 255, 255, 0.35)'; this.style.transform='scale(1.05)'"
+                    onmouseout="this.style.background='rgba(255, 255, 255, 0.25)'; this.style.transform='scale(1)'"
+                    title="Ovozda qayta eshittirish"
+                >
+                    🔊
+                </button>
+            </div>
             <div style="display: inline-block; padding: 5px 12px; background: rgba(255, 255, 255, 0.2); border-radius: 20px; font-size: 0.85em; font-weight: bold;">
                 ${data.tense}
             </div>
